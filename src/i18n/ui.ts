@@ -22,7 +22,7 @@ export const ui = {
     // 'hero.title': 'Advancing Computer Vision & Deep Learning Research.', // Moved to config.ts
     // 'hero.subtitle': 'We are the Scholar-Lite Lab.', // Moved to config.ts
     'hero.viewPubs': 'View Publications',
-    'hero.meetTeam': 'Meet the Team',
+    'hero.meetTeam': 'Lab Members',
     
     'section.selectedPubs': 'Selected Publications',
     'section.viewAll': 'View all',

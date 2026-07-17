@@ -1,0 +1,216 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+import {
+  Mail,
+  Globe,
+  Twitter,
+  GraduationCap,
+  ArrowLeft,
+  Linkedin,
+  Github,
+} from 'lucide-react';
+
+export async function getStaticPaths() {
+  const people = await getCollection('people');
+
+  return people.map((member) => {
+    const slug =
+      member.id
+        .replace(/\.[^/.]+$/, '')
+        .split('/')
+        .pop() ?? member.id;
+
+    return {
+      params: {
+        slug,
+      },
+      props: {
+        member,
+      },
+    };
+  });
+}
+
+const { member } = Astro.props;
+const { Content } = await render(member);
+
+const {
+  name,
+  role,
+  title,
+  avatar,
+  email,
+  website,
+  linkedin,
+  github,
+  twitter,
+  googleScholar,
+} = member.data;
+---
+
+<Layout title={name}>
+  <main class="mx-auto max-w-4xl px-4 py-12 sm:py-20">
+    <a
+      href="/people"
+      class="mb-8 inline-flex items-center text-sm text-gray-500 transition-colors hover:text-blue-600"
+    >
+      <ArrowLeft className="mr-1 h-4 w-4" />
+      Back to People
+    </a>
+
+    <section class="mb-12 rounded-3xl border border-gray-100 bg-white p-8 shadow-sm">
+      <div class="flex flex-col items-start gap-8 md:flex-row">
+        <div
+          class="mx-auto h-32 w-32 shrink-0 overflow-hidden rounded-2xl bg-gray-100 md:mx-0 md:h-48 md:w-48"
+        >
+          <img
+            src={avatar.src}
+            alt={name}
+            class="h-full w-full object-cover"
+          />
+        </div>
+
+        <div class="flex-grow text-center md:text-left">
+          <h1 class="mb-2 text-3xl font-bold text-gray-900">
+            {name}
+          </h1>
+
+          <p class="mb-6 text-xl font-medium text-blue-600">
+            {role}
+          </p>
+
+          <div class="flex flex-wrap justify-center gap-3 md:justify-start">
+            {
+              email && (
+                <a
+                  href={`mailto:${email}`}
+                  class="flex items-center gap-2 rounded-full bg-gray-50 px-4 py-2 text-sm text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                >
+                  <Mail className="h-4 w-4" />
+                  <span>Email</span>
+                </a>
+              )
+            }
+
+            {
+              website && (
+                <a
+                  href={website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-2 rounded-full bg-gray-50 px-4 py-2 text-sm text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                >
+                  <Globe className="h-4 w-4" />
+                  <span>Website</span>
+                </a>
+              )
+            }
+
+            {
+              linkedin && (
+                <a
+                  href={linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-2 rounded-full bg-gray-50 px-4 py-2 text-sm text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                >
+                  <Linkedin className="h-4 w-4" />
+                  <span>LinkedIn</span>
+                </a>
+              )
+            }
+
+            {
+              github && (
+                <a
+                  href={github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-2 rounded-full bg-gray-50 px-4 py-2 text-sm text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                >
+                  <Github className="h-4 w-4" />
+                  <span>GitHub</span>
+                </a>
+              )
+            }
+
+            {
+              twitter && (
+                <a
+                  href={twitter}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-2 rounded-full bg-gray-50 px-4 py-2 text-sm text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                >
+                  <Twitter className="h-4 w-4" />
+                  <span>Twitter</span>
+                </a>
+              )
+            }
+
+            {
+              googleScholar && (
+                <a
+                  href={googleScholar}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center gap-2 rounded-full bg-gray-50 px-4 py-2 text-sm text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                >
+                  <GraduationCap className="h-4 w-4" />
+                  <span>Google Scholar</span>
+                </a>
+              )
+            }
+          </div>
+
+          {
+            title && title.length > 0 && (
+              <div class="mt-4 flex flex-wrap justify-center gap-2 md:justify-start">
+                {title.map((item: string) => (
+                  <span class="rounded border border-blue-200 bg-blue-100 px-2.5 py-0.5 text-xs text-blue-800">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            )
+          }
+        </div>
+      </div>
+    </section>
+
+    <article
+      class="
+        max-w-none text-gray-700
+        [&_p]:mb-5
+        [&_p]:leading-8
+
+        [&_h2]:mt-12
+        [&_h2]:mb-6
+        [&_h2]:border-l-4
+        [&_h2]:border-blue-600
+        [&_h2]:pl-4
+        [&_h2]:text-2xl
+        [&_h2]:font-bold
+        [&_h2]:text-gray-900
+
+        [&_h3]:mt-8
+        [&_h3]:mb-3
+        [&_h3]:text-xl
+        [&_h3]:font-semibold
+        [&_h3]:text-gray-900
+
+        [&_ul]:my-5
+        [&_ul]:list-disc
+        [&_ul]:space-y-2
+        [&_ul]:pl-6
+
+        [&_li]:leading-7
+        [&_strong]:font-semibold
+        [&_strong]:text-gray-900
+      "
+    >
+      <Content />
+    </article>
+  </main>
+</Layout>

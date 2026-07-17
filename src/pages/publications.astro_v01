@@ -5,12 +5,14 @@ import { getCollection } from 'astro:content';
 
 const allPublications = (await getCollection('publications')).sort(
   (a, b) => {
+    // 먼저 최신 연도순
     const yearDifference = b.data.year - a.data.year;
 
     if (yearDifference !== 0) {
       return yearDifference;
     }
 
+    // 같은 연도에서는 제목순
     return a.data.title.localeCompare(b.data.title);
   }
 );
@@ -40,28 +42,43 @@ const categories = [
 
 type CategoryId = (typeof categories)[number]['id'];
 
+/**
+ * Publication 파일의 첫 번째 하위 폴더를 카테고리로 사용합니다.
+ *
+ * journal/example-paper.md
+ * → journal
+ *
+ * conference/example-paper.md
+ * → conference
+ */
 const getCategoryFromId = (id: string): CategoryId => {
-  const directoryName = id
-    .replace(/\.[^/.]+$/, '')
-    .split('/')[0]
-    ?.toLowerCase();
+  const directoryName = id.split('/')[0]?.toLowerCase();
 
-  const category = categories.find(
-    (item) => item.id === directoryName
+  const matchedCategory = categories.find(
+    (category) => category.id === directoryName
   );
 
-  // publications/ 바로 아래에 있는 기존 파일은
+  // publications 폴더 바로 아래에 남아 있는 기존 파일은
   // 임시로 journal에 포함합니다.
-  return category?.id ?? 'journal';
+  return matchedCategory?.id ?? 'journal';
 };
 
-const getPublicationsByCategory = (
-  categoryId: CategoryId
-) =>
+const getPublicationsByCategory = (categoryId: CategoryId) =>
   allPublications.filter(
     (publication) =>
       getCategoryFromId(publication.id) === categoryId
   );
+
+const getYears = (
+  publications: typeof allPublications
+): number[] =>
+  [
+    ...new Set(
+      publications.map(
+        (publication) => publication.data.year
+      )
+    ),
+  ].sort((a, b) => b - a);
 ---
 
 <Layout title="Publications">
@@ -118,13 +135,15 @@ const getPublicationsByCategory = (
           const publications =
             getPublicationsByCategory(category.id);
 
+          const years = getYears(publications);
+
           return (
             <section
               id={category.id}
               class="scroll-mt-28"
               aria-labelledby={`${category.id}-heading`}
             >
-              <!-- Category heading -->
+              <!-- Category title -->
               <div class="mb-8 border-l-4 border-blue-600 pl-4">
                 <div class="flex flex-wrap items-end justify-between gap-4">
                   <div>
@@ -141,7 +160,8 @@ const getPublicationsByCategory = (
                   </div>
 
                   <span class="text-sm text-gray-500">
-                    {publications.length}{' '}
+                    {publications.length}
+                    {' '}
                     {publications.length === 1
                       ? 'entry'
                       : 'entries'}
@@ -151,15 +171,43 @@ const getPublicationsByCategory = (
 
               {
                 publications.length > 0 ? (
-                  <div>
-                    {publications.map((publication) => (
-                      <PublicationItem
-                        entry={publication}
-                      />
-                    ))}
+                  <div class="space-y-12">
+                    {years.map((year) => {
+                      const publicationsForYear =
+                        publications.filter(
+                          (publication) =>
+                            publication.data.year === year
+                        );
+
+                      return (
+                        <div class="relative">
+                          <!-- Sticky year heading -->
+                          <div
+                            class="sticky top-20 z-10 mb-4 border-b border-gray-100 bg-white/90 py-2 backdrop-blur"
+                          >
+                            <h3 class="text-2xl font-bold text-gray-900">
+                              {year}
+                            </h3>
+                          </div>
+
+                          <!-- Entries -->
+                          <div class="divide-y divide-gray-100">
+                            {publicationsForYear.map(
+                              (publication) => (
+                                <PublicationItem
+                                  entry={publication}
+                                />
+                              )
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
-                  <div class="rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center">
+                  <div
+                    class="rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center"
+                  >
                     <p class="text-sm text-gray-500">
                       No {category.label.toLowerCase()} have been added yet.
                     </p>
@@ -185,10 +233,14 @@ const getPublicationsByCategory = (
 
     {
       allPublications.length === 0 && (
-        <div class="mt-16 rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 py-12 text-center">
+        <div
+          class="mt-16 rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 py-12 text-center"
+        >
           <p class="text-gray-500">
             No publications found. Add Markdown files under
-            <code class="mx-1 rounded bg-gray-100 px-2 py-1 text-sm">
+            <code
+              class="mx-1 rounded bg-gray-100 px-2 py-1 text-sm"
+            >
               src/content/publications/
             </code>
           </p>

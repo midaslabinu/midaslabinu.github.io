@@ -1,6 +1,15 @@
 ---
-import { FileText, Github, Play, MonitorPlay, Video, ExternalLink, Globe, Sparkles } from 'lucide-react';
-import { Image } from 'astro:assets';
+import {
+  FileText,
+  Github,
+  Play,
+  MonitorPlay,
+  Video,
+  ExternalLink,
+  Globe,
+  Sparkles,
+} from 'lucide-react';
+
 import type { CollectionEntry } from 'astro:content';
 
 interface Props {
@@ -8,92 +17,300 @@ interface Props {
 }
 
 const { entry } = Astro.props;
-const { title, authors, year, venue, links, award, cover, badges } = entry.data;
+
+const {
+  title,
+  authors,
+  year,
+  venue,
+  links,
+  award,
+  badges,
+  equalContributionAuthors = [],
+  correspondingAuthors = [],
+} = entry.data;
+
+const highlightedAuthor = 'Hyundoo Jeong';
 
 const iconMap: Record<string, any> = {
+  view: ExternalLink,
   pdf: FileText,
+  project: Globe,
+  website: Globe,
   code: Github,
+  github: Github,
   demo: Play,
   slides: MonitorPlay,
   video: Video,
-  website: Globe,
 };
+
+const labelMap: Record<string, string> = {
+  view: 'View',
+  pdf: 'PDF',
+  project: 'Project',
+  website: 'Website',
+  code: 'Code',
+  github: 'Code',
+  demo: 'Demo',
+  slides: 'Slides',
+  video: 'Video',
+};
+
+const linkOrder = [
+  'view',
+  'pdf',
+  'project',
+  'website',
+  'code',
+  'github',
+  'demo',
+  'slides',
+  'video',
+];
 
 const badgeStyles: Record<string, string> = {
-  gold: "bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-200 shadow-sm",
-  blue: "bg-blue-50 text-blue-700 border-blue-100",
-  red: "bg-rose-50 text-rose-700 border-rose-100",
-  green: "bg-emerald-50 text-emerald-700 border-emerald-100",
-  default: "bg-gray-50 text-gray-700 border-gray-200"
+  gold:
+    'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-200 shadow-sm',
+  blue:
+    'bg-blue-50 text-blue-700 border-blue-100',
+  red:
+    'bg-rose-50 text-rose-700 border-rose-100',
+  green:
+    'bg-emerald-50 text-emerald-700 border-emerald-100',
+  default:
+    'bg-gray-50 text-gray-700 border-gray-200',
 };
 
-// Helper to format link label (e.g., "pdf" -> "PDF")
-const formatLabel = (key: string) => {
-  if (key === 'pdf') return 'PDF';
-  if (key === 'github') return 'Code';
-  if (key === 'website') return 'Project';
-  return key.charAt(0).toUpperCase() + key.slice(1);
-};
+const isValidLink = (url?: string) =>
+  Boolean(url && url.trim() !== '' && url !== '#');
+
+/*
+ * 제목 링크 우선순위
+ * 1. 공식 상세 페이지
+ * 2. 일반 웹사이트
+ * 3. 프로젝트 페이지
+ * 4. PDF 또는 preprint
+ */
+const primaryLink = isValidLink(links?.view)
+  ? links?.view
+  : isValidLink(links?.website)
+    ? links?.website
+    : isValidLink(links?.project)
+      ? links?.project
+      : isValidLink(links?.pdf)
+        ? links?.pdf
+        : undefined;
+
+/*
+ * 값이 있는 링크만 선택하고,
+ * linkOrder에 정의된 순서대로 표시합니다.
+ */
+const visibleLinks = links
+  ? linkOrder
+      .filter((key) => {
+        const url = links[key as keyof typeof links];
+        return isValidLink(url);
+      })
+      .map((key) => [
+        key,
+        links[key as keyof typeof links],
+      ] as const)
+  : [];
+
+const hasEqualContributors =
+  equalContributionAuthors.length > 0;
+
+const hasCorrespondingAuthors =
+  correspondingAuthors.length > 0;
 ---
 
-<div class="flex flex-col sm:flex-row gap-6 py-8 border-b border-gray-100 last:border-0 group">
-  {cover && (
-    <div class="shrink-0 w-full sm:w-48 h-32 sm:h-28 rounded-lg overflow-hidden border border-gray-100 bg-gray-50">
-      <Image src={cover} alt={title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" quality={80} format="webp" width={300} />
-    </div>
-  )}
-  
-  <div class="flex-grow space-y-2">
-    <!-- Title -->
-    <h3 class="text-lg font-semibold text-gray-900 leading-tight group-hover:text-blue-600 transition-colors">
-      {links?.website ? <a href={links.website} target="_blank">{title}</a> : (links?.pdf ? <a href={links.pdf} target="_blank">{title}</a> : title)}
-    </h3>
-    
-    <!-- Authors -->
-    <div class="text-gray-600 text-sm leading-relaxed">
-      {authors.join(', ')}
-    </div>
-    
-    <!-- Venue & Year & Badges -->
-    <div class="flex items-center flex-wrap gap-2 text-sm text-gray-500">
-      <span class="font-medium text-gray-800">{venue}</span>
-      <span>·</span>
-      <span>{year}</span>
-      
-      {/* Legacy award support (fallback) */}
-      {award && !badges && (
-        <span class="px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 text-xs font-medium border border-amber-200 flex items-center gap-1 shadow-sm">
-          <Sparkles class="w-3 h-3" /> {award}
-        </span>
-      )}
+<article class="group border-b border-gray-100 py-8 last:border-b-0">
+  <!-- Title -->
+  <h3
+    class="text-lg font-semibold leading-snug text-gray-900 transition-colors group-hover:text-blue-600"
+  >
+    {
+      primaryLink ? (
+        <a
+          href={primaryLink}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {title}
+        </a>
+      ) : (
+        title
+      )
+    }
+  </h3>
 
-      {/* New Badges System */}
-      {badges && badges.map(badge => (
-        <span class={`px-2 py-0.5 rounded-full text-xs font-medium border flex items-center gap-1 ${badgeStyles[badge.type] || badgeStyles.default}`}>
-           {badge.type === 'gold' && <Sparkles class="w-3 h-3" />}
-           {badge.text}
-        </span>
-      ))}
-    </div>
-    
-    <!-- Links -->
-    {links && Object.keys(links).length > 0 && (
-      <div class="flex flex-wrap gap-3 pt-1">
-        {Object.entries(links).map(([key, url]) => {
-          if (!url || url === '#') return null;
-          const Icon = iconMap[key] || ExternalLink;
+  <!-- Authors -->
+  <div class="mt-3">
+    <p class="text-sm leading-7 text-gray-600">
+      {
+        authors.map((author, index) => {
+          const isHighlighted =
+            author === highlightedAuthor;
+
+          const isEqualContributor =
+            equalContributionAuthors.includes(author);
+
+          const isCorrespondingAuthor =
+            correspondingAuthors.includes(author);
+
           return (
-            <a 
+            <>
+              {index > 0 && ', '}
+
+              <span
+                class={
+                  isHighlighted
+                    ? 'font-semibold text-gray-900'
+                    : ''
+                }
+              >
+                {author}
+
+                {
+                  isEqualContributor && (
+                    <sup
+                      class="ml-0.5 text-[0.7em] font-semibold text-gray-500"
+                      aria-label="Equal contribution"
+                    >
+                      †
+                    </sup>
+                  )
+                }
+
+                {
+                  isCorrespondingAuthor && (
+                    <sup
+                      class="ml-0.5 text-[0.7em] font-semibold text-gray-500"
+                      aria-label="Corresponding author"
+                    >
+                      *
+                    </sup>
+                  )
+                }
+              </span>
+            </>
+          );
+        })
+      }
+    </p>
+
+    <!-- Author contribution notes -->
+    {
+      (hasEqualContributors || hasCorrespondingAuthors) && (
+        <div class="mt-1 space-y-0.5 text-xs leading-5 text-gray-400">
+          {
+            hasEqualContributors && (
+              <p>
+                <span class="font-medium">†</span>
+                {' '}
+                These authors contributed equally.
+              </p>
+            )
+          }
+
+          {
+            hasCorrespondingAuthors && (
+              <p>
+                <span class="font-medium">*</span>
+                {' '}
+                {
+                  correspondingAuthors.length > 1
+                    ? 'Co-corresponding authors.'
+                    : 'Corresponding author.'
+                }
+              </p>
+            )
+          }
+        </div>
+      )
+    }
+  </div>
+
+  <!-- Venue, year, and badges -->
+  <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+    {
+      venue && (
+        <span class="font-medium text-gray-800">
+          {venue}
+        </span>
+      )
+    }
+
+    {
+      venue && (
+        <span aria-hidden="true">
+          ·
+        </span>
+      )
+    }
+
+    <span>{year}</span>
+
+    <!-- Legacy award -->
+    {
+      award && !badges && (
+        <span
+          class="flex items-center gap-1 rounded-full border border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 px-2 py-0.5 text-xs font-medium text-amber-700 shadow-sm"
+        >
+          <Sparkles className="h-3 w-3" />
+          {award}
+        </span>
+      )
+    }
+
+    <!-- Badges -->
+    {
+      badges &&
+        badges.map((badge) => (
+          <span
+            class={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${
+              badgeStyles[badge.type] ||
+              badgeStyles.default
+            }`}
+          >
+            {
+              badge.type === 'gold' && (
+                <Sparkles className="h-3 w-3" />
+              )
+            }
+
+            {badge.text}
+          </span>
+        ))
+    }
+  </div>
+
+  <!-- Links -->
+  {
+    visibleLinks.length > 0 && (
+      <div class="mt-4 flex flex-wrap gap-2">
+        {visibleLinks.map(([key, url]) => {
+          const Icon =
+            iconMap[key] || ExternalLink;
+
+          const label =
+            labelMap[key] ||
+            key.charAt(0).toUpperCase() +
+              key.slice(1);
+
+          return (
+            <a
               href={url}
               target="_blank"
-              class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-gray-600 border border-gray-200 rounded-md hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 transition-all"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-all hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
             >
-              <Icon className="w-3.5 h-3.5" />
-              {formatLabel(key)}
+              <Icon className="h-3.5 w-3.5" />
+              {label}
             </a>
           );
         })}
       </div>
-    )}
-  </div>
-</div>
+    )
+  }
+</article>

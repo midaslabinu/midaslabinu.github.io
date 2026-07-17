@@ -1,0 +1,102 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PeopleCard from '../components/PeopleCard.astro';
+import { getCollection } from 'astro:content';
+
+const allMembers = await getCollection('people');
+
+const groups = [
+  {
+    id: 'pi',
+    title: 'Principal Investigator',
+    roles: ['Principal Investigator'],
+  },
+  {
+    id: 'graduate',
+    title: 'Graduate Students',
+    roles: ['PhD Student', 'Master Student'],
+  },
+  {
+    id: 'undergraduate',
+    title: 'Undergraduate Research Interns',
+    roles: ['Undergraduate Research Intern', 'Undergraduate'],
+  },
+  {
+    id: 'alumni',
+    title: 'Alumni',
+    roles: ['Alumni'],
+  },
+];
+
+const rolePriority: Record<string, number> = {
+  'Principal Investigator': 0,
+  'PhD Student': 1,
+  'Master Student': 2,
+  'Undergraduate Research Intern': 3,
+  Undergraduate: 4,
+  Alumni: 5,
+};
+
+const groupedMembers = groups
+  .map(group => {
+    const members = allMembers
+      .filter(member => group.roles.includes(member.data.role))
+      .sort((a, b) => {
+        const roleDifference =
+          (rolePriority[a.data.role] ?? 99) -
+          (rolePriority[b.data.role] ?? 99);
+
+        if (roleDifference !== 0) {
+          return roleDifference;
+        }
+
+        return (a.data.weight ?? 100) - (b.data.weight ?? 100);
+      });
+
+    return {
+      ...group,
+      members,
+    };
+  })
+  .filter(group => group.members.length > 0);
+---
+
+<Layout title="People">
+  <main class="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
+    <header class="mx-auto mb-16 max-w-3xl text-center">
+      <h1 class="mb-4 text-4xl font-bold text-gray-900 dark:text-white">
+        Lab Members
+      </h1>
+
+      <p class="text-lg text-gray-600 dark:text-gray-300">
+        Meet the researchers and students of MIDAS Lab.
+      </p>
+    </header>
+
+    <div class="space-y-20">
+      {
+        groupedMembers.map(group => (
+          <section id={group.id}>
+            <h2 class="mb-10 border-l-4 border-blue-600 pl-4 text-2xl font-bold text-gray-900 dark:text-white">
+              {group.title}
+            </h2>
+
+            <div class="grid grid-cols-1 gap-x-10 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+              {group.members.map(member => (
+                <PeopleCard member={member} basePath="/people" />
+              ))}
+            </div>
+          </section>
+        ))
+      }
+
+      {
+        allMembers.length === 0 && (
+          <p class="py-12 text-center text-gray-500 dark:text-gray-400">
+            Member profiles will be added soon.
+          </p>
+        )
+      }
+    </div>
+  </main>
+</Layout>

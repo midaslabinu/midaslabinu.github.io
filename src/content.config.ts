@@ -2,30 +2,64 @@ import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
 const publications = defineCollection({
-  loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/publications" }),
-  schema: ({ image }) => z.object({
-    title: z.string(),
-    authors: z.array(z.string()),
-    year: z.number(),
-    venue: z.string(),
-    type: z.enum(['paper', 'book', 'patent', 'software']).default('paper'),
-    cover: image().optional(),
-    doi: z.string().optional(),
-    award: z.string().optional(),
-    links: z.object({
-      pdf: z.string().optional(),
-      code: z.string().optional(),
-      website: z.string().optional(),
-      demo: z.string().optional(),
-      slides: z.string().optional(),
-      video: z.string().optional(),
-    }).optional(),
-    featured: z.boolean().default(false),
-    badges: z.array(z.object({
-      text: z.string(),
-      type: z.enum(['gold', 'blue', 'red', 'green', 'default']).default('default')
-    })).optional(),
+  loader: glob({
+    pattern: "**/*.{md,mdx}",
+    base: "./src/content/publications",
   }),
+
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),
+      authors: z.array(z.string()),
+      year: z.number(),
+      venue: z.string(),
+
+      type: z
+        .enum(["paper", "book", "patent", "software"])
+        .default("paper"),
+
+      cover: image().optional(),
+      doi: z.string().optional(),
+      award: z.string().optional(),
+      
+      equalContributionAuthors: z.array(z.string()).optional(),
+      correspondingAuthors: z.array(z.string()).optional(),
+
+      links: z
+        .object({
+          // 논문, 북챕터, 특허 등의 공식 상세 페이지
+          view: z.string().optional(),
+
+          // preprint 또는 직접 PDF 링크
+          pdf: z.string().optional(),
+
+          // 연구 프로젝트 전용 페이지
+          project: z.string().optional(),
+
+          // 일반 관련 웹사이트
+          website: z.string().optional(),
+
+          // 코드 및 부가 자료
+          code: z.string().optional(),
+          demo: z.string().optional(),
+          slides: z.string().optional(),
+          video: z.string().optional(),
+        })
+        .optional(),
+
+      featured: z.boolean().default(false),
+
+      badges: z
+        .array(
+          z.object({
+            text: z.string(),
+            type: z
+              .enum(["gold", "blue", "red", "green", "default"])
+              .default("default"),
+          })
+        )
+        .optional(),
+    }),
 });
 
 const books = defineCollection({
@@ -53,6 +87,38 @@ const books = defineCollection({
     })).optional(),
   }),
 });
+
+
+
+const people = defineCollection({
+  loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/people" }),
+  schema: ({ image }) => z.object({
+    name: z.string(),
+    role: z.enum([
+      'Principal Investigator', 
+      'Professor', 
+      'Associate Professor',
+      'Assistant Professor',
+      'Postdoc', 
+      'Research Assistant',
+      'PhD Student', 
+      'Master Student', 
+      'Undergraduate', 
+      'Alumni'
+    ]),
+    title: z.array(z.string()).optional(), // For specific academic titles like "Academician", "Changjiang Scholar"
+    avatar: image(),
+    bio: z.string().optional(), // Short bio for card
+    email: z.string().optional(),
+    website: z.string().optional(),
+    linkedin: z.string().optional(),
+    github: z.string().optional(),
+    twitter: z.string().optional(),
+    googleScholar: z.string().optional(),
+    weight: z.number().default(100),
+  }),
+});
+
 
 const team = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/team" }),
@@ -151,6 +217,7 @@ export const collections = {
   publications,
   books,
   team,
+  people,
   news,
   research,
   patents,
