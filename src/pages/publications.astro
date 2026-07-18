@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import PublicationItem from '../components/PublicationItem.astro';
 import { getCollection } from 'astro:content';
+import { ArrowUp } from 'lucide-react';
 
 const allPublications = (await getCollection('publications')).sort(
   (a, b) => {
@@ -66,7 +67,7 @@ const getPublicationsByCategory = (
 
 <Layout title="Publications">
   <main
-    id="top"
+    id="publication-page-top"
     class="mx-auto max-w-5xl px-4 py-12 sm:py-20"
   >
     <!-- Page header -->
@@ -86,7 +87,9 @@ const getPublicationsByCategory = (
       aria-label="Publication categories"
       class="mb-16 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5"
     >
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div
+        class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4"
+      >
         {
           categories.map((category) => {
             const publications =
@@ -125,8 +128,12 @@ const getPublicationsByCategory = (
               aria-labelledby={`${category.id}-heading`}
             >
               <!-- Category heading -->
-              <div class="mb-8 border-l-4 border-blue-600 pl-4">
-                <div class="flex flex-wrap items-end justify-between gap-4">
+              <div
+                class="mb-8 border-l-4 border-blue-600 pl-4"
+              >
+                <div
+                  class="flex flex-wrap items-end justify-between gap-4"
+                >
                   <div>
                     <h2
                       id={`${category.id}-heading`}
@@ -142,9 +149,11 @@ const getPublicationsByCategory = (
 
                   <span class="text-sm text-gray-500">
                     {publications.length}{' '}
-                    {publications.length === 1
-                      ? 'entry'
-                      : 'entries'}
+                    {
+                      publications.length === 1
+                        ? 'entry'
+                        : 'entries'
+                    }
                   </span>
                 </div>
               </div>
@@ -159,24 +168,17 @@ const getPublicationsByCategory = (
                     ))}
                   </div>
                 ) : (
-                  <div class="rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center">
+                  <div
+                    class="rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center"
+                  >
                     <p class="text-sm text-gray-500">
-                      No {category.label.toLowerCase()} have been added yet.
+                      No{' '}
+                      {category.label.toLowerCase()}{' '}
+                      have been added yet.
                     </p>
                   </div>
                 )
               }
-
-              <!-- Back to top -->
-              <div class="mt-10 flex justify-end">
-                <a
-                  href="#top"
-                  class="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-blue-50 hover:text-blue-600"
-                >
-                  <span aria-hidden="true">↑</span>
-                  <span>Back to top</span>
-                </a>
-              </div>
             </section>
           );
         })
@@ -185,10 +187,14 @@ const getPublicationsByCategory = (
 
     {
       allPublications.length === 0 && (
-        <div class="mt-16 rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 py-12 text-center">
+        <div
+          class="mt-16 rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 py-12 text-center"
+        >
           <p class="text-gray-500">
             No publications found. Add Markdown files under
-            <code class="mx-1 rounded bg-gray-100 px-2 py-1 text-sm">
+            <code
+              class="mx-1 rounded bg-gray-100 px-2 py-1 text-sm"
+            >
               src/content/publications/
             </code>
           </p>
@@ -196,7 +202,107 @@ const getPublicationsByCategory = (
       )
     }
   </main>
+
+  <!-- Floating Back to Top button -->
+  <button
+    id="back-to-top"
+    type="button"
+    aria-label="Back to top"
+    title="Back to top"
+    class="pointer-events-none fixed bottom-6 right-6 z-50 flex h-12 w-12 translate-y-4 items-center justify-center rounded-full bg-gray-900 text-white opacity-0 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-200"
+  >
+    <ArrowUp className="h-5 w-5" />
+  </button>
 </Layout>
+
+<script>
+  function initializePublicationPage() {
+    const page =
+      document.querySelector<HTMLElement>(
+        '#publication-page-top'
+      );
+
+    const backToTopButton =
+      document.querySelector<HTMLButtonElement>(
+        '#back-to-top'
+      );
+
+    if (!page || !backToTopButton) {
+      return;
+    }
+
+    /*
+     * Astro 페이지 전환이나 재초기화 과정에서
+     * 이벤트가 중복 등록되는 것을 방지합니다.
+     */
+    if (
+      page.dataset.backToTopInitialized === 'true'
+    ) {
+      return;
+    }
+
+    page.dataset.backToTopInitialized = 'true';
+
+    function updateBackToTopButton() {
+      const shouldShow = window.scrollY > 500;
+
+      backToTopButton.classList.toggle(
+        'opacity-0',
+        !shouldShow
+      );
+
+      backToTopButton.classList.toggle(
+        'translate-y-4',
+        !shouldShow
+      );
+
+      backToTopButton.classList.toggle(
+        'pointer-events-none',
+        !shouldShow
+      );
+
+      backToTopButton.classList.toggle(
+        'opacity-100',
+        shouldShow
+      );
+
+      backToTopButton.classList.toggle(
+        'translate-y-0',
+        shouldShow
+      );
+
+      backToTopButton.classList.toggle(
+        'pointer-events-auto',
+        shouldShow
+      );
+    }
+
+    backToTopButton.addEventListener(
+      'click',
+      () => {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth',
+        });
+      }
+    );
+
+    window.addEventListener(
+      'scroll',
+      updateBackToTopButton,
+      { passive: true }
+    );
+
+    updateBackToTopButton();
+  }
+
+  initializePublicationPage();
+
+  document.addEventListener(
+    'astro:page-load',
+    initializePublicationPage
+  );
+</script>
 
 <style is:global>
   html {

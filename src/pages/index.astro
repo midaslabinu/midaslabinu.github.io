@@ -2,168 +2,458 @@
 import Layout from '../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
-import { ArrowRight, Calendar } from 'lucide-react';
+import {
+  ArrowRight,
+  Dna,
+  Activity,
+  Share2,
+  GraduationCap,
+  Mail,
+} from 'lucide-react';
 import { SITE } from '../config';
 
-const papers = (await getCollection('publications'))
-  .filter(p => p.data.type === 'paper' && p.data.featured)
-  .sort((a, b) => b.data.year - a.data.year)
-  .slice(0, 3);
+/*
+ * 공개된 뉴스 중 최신 4개만 홈 화면에 표시
+ */
+const latestNews = (await getCollection('news'))
+  .filter((entry) => entry.data.published !== false)
+  .sort(
+    (a, b) =>
+      b.data.date.valueOf() - a.data.date.valueOf()
+  )
+  .slice(0, 4);
 
-const activities = (await getCollection('activities'))
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
-  .slice(0, 3);
+/*
+ * 뉴스 파일 ID에서 확장자와 폴더 경로를 제거하여
+ * 상세 페이지 주소에 사용할 slug를 생성합니다.
+ */
+const getNewsSlug = (
+  entry: (typeof latestNews)[number]
+) =>
+  entry.id
+    .replace(/\.[^/.]+$/, '')
+    .split('/')
+    .pop() ?? entry.id;
+
+/*
+ * 날짜를 YYYY-MM-DD 형태로 표시합니다.
+ */
+const formatNewsDate = (date: Date) =>
+  new Intl.DateTimeFormat('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+
+const researchAreas = [
+  {
+    title: 'Bioinformatics',
+    description:
+      'Computational and AI-driven methods for biological data, including single-cell omics, network biology, sequence analysis, and drug discovery.',
+    icon: Dna,
+    href: '/research#bioinformatics',
+  },
+  {
+    title: 'Healthcare AI',
+    description:
+      'Artificial intelligence for analyzing voice, cardiovascular, respiratory, gait, and other biomedical data.',
+    icon: Activity,
+    href: '/research#healthcare-ai',
+  },
+  {
+    title: 'AI for Science & Engineering',
+    description:
+      'AI and data-driven methods for diverse scientific and engineering problems, including time-series modeling and interdisciplinary research.',
+    icon: Share2,
+    href: '/research#ai-for-science-engineering',
+  },
+];
 ---
 
 <Layout title="Home">
-  <!-- Hero Section -->
-  <section class="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden">
-    <!-- Background Image -->
+  <!-- =====================================================
+       Hero
+       ===================================================== -->
+  <section
+    class="relative flex h-screen min-h-[600px] items-center justify-center overflow-hidden"
+  >
     <div class="absolute inset-0 z-0">
-      {SITE.hero.image ? (
-        <Image 
-          class="w-full h-full object-cover" 
-          src={SITE.hero.image} 
-          alt={SITE.hero.title}
-          loading="eager"
-          fetchpriority="high"
-          decoding="sync"
-          quality={60}
-          format="webp"
-          widths={[640, 1024, 1920]}
-          sizes="100vw"
-        />
-      ) : (
-        <div class="w-full h-full bg-gradient-to-br from-gray-900 to-gray-800"></div>
-      )}
-      <!-- Dark Gradient Overlay for Readability -->
-      <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent"></div>
-      <!-- Subtle Texture (CSS only) -->
-      <div class="absolute inset-0 opacity-[0.03]" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
+      {
+        SITE.hero.image ? (
+          <Image
+            class="h-full w-full object-cover"
+            src={SITE.hero.image}
+            alt={SITE.hero.title}
+            loading="eager"
+            fetchpriority="high"
+            decoding="sync"
+            quality={60}
+            format="webp"
+            widths={[640, 1024, 1920]}
+            sizes="100vw"
+          />
+        ) : (
+          <div
+            class="h-full w-full bg-gradient-to-br from-gray-900 to-gray-800"
+          />
+        )
+      }
+
+      <div
+        class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/55 to-transparent"
+      >
+      </div>
+
+      <div
+        class="absolute inset-0 opacity-[0.03]"
+        style="
+          background-image:
+            radial-gradient(#ffffff 1px, transparent 1px);
+          background-size: 32px 32px;
+        "
+      >
+      </div>
     </div>
 
-    <!-- Content -->
-    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+    <div
+      class="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"
+    >
       <div class="max-w-3xl">
-        <h1 class="text-5xl font-extrabold text-white sm:text-6xl md:text-7xl mb-6 drop-shadow-lg leading-tight">
-          <span class="block xl:inline">{SITE.hero.title}</span>
+        <h1
+          class="mb-6 text-5xl font-extrabold leading-tight text-white drop-shadow-lg sm:text-6xl md:text-7xl"
+        >
+          {SITE.hero.title}
         </h1>
-        <p class="mt-4 text-xl text-gray-300 sm:max-w-2xl md:text-2xl drop-shadow-md">
+
+        <p
+          class="mt-4 text-xl leading-relaxed text-gray-300 drop-shadow-md sm:max-w-2xl md:text-2xl"
+        >
           {SITE.hero.subtitle}
         </p>
-        <div class="mt-10 flex gap-4">
-          <a href="/publications" class="flex items-center justify-center px-8 py-4 border border-transparent text-lg font-medium rounded-full text-black bg-white hover:bg-gray-100 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]" data-i18n-key="hero.viewPubs">
-            View Publications
+
+        <div class="mt-10 flex flex-wrap gap-4">
+          <a
+            href="/research"
+            class="flex items-center justify-center rounded-full border border-transparent bg-white px-8 py-4 text-lg font-medium text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300 hover:bg-gray-100 hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]"
+          >
+            Explore Research
           </a>
-          <a href="/people" class="flex items-center justify-center px-8 py-4 border-2 border-white/30 text-lg font-medium rounded-full text-white hover:bg-white/10 transition-all duration-300 backdrop-blur-sm" data-i18n-key="hero.meetTeam">
-            Lab Members
+
+          <a
+            href="#join"
+            class="flex items-center justify-center rounded-full border-2 border-white/30 px-8 py-4 text-lg font-medium text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/10"
+          >
+            Join MIDAS Lab
           </a>
         </div>
       </div>
     </div>
 
-    <!-- Scroll Indicator -->
-    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce text-white/50">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+    <div
+      class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce text-white/50"
+      aria-hidden="true"
+    >
+      <svg
+        class="h-6 w-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M19 14l-7 7m0 0l-7-7m7 7V3"
+        >
+        </path>
       </svg>
     </div>
   </section>
 
-  <!-- Selected Publications -->
-  <section class="py-16 bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-end mb-8">
-        <h2 class="text-3xl font-bold text-gray-900" data-i18n-key="section.selectedPubs">Selected Publications</h2>
-        <a href="/achievements" class="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 group">
-          <span data-i18n-key="section.viewAll">View all</span> <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+  <!-- =====================================================
+       Latest News
+       ===================================================== -->
+  <section class="bg-white py-16 sm:py-20">
+    <div
+      class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+    >
+      <div
+        class="mb-10 flex items-end justify-between gap-4"
+      >
+        <div>
+          <h2
+            class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
+          >
+            Latest News
+          </h2>
+
+          <p class="mt-3 text-base text-gray-500">
+            Recent publications, awards, research projects,
+            and lab updates.
+          </p>
+        </div>
+
+        <a
+          href="/news"
+          class="hidden items-center gap-1 font-medium text-blue-600 transition-colors hover:text-blue-700 sm:flex"
+        >
+          View all
+          <ArrowRight className="h-4 w-4" />
         </a>
       </div>
 
-      <div class="grid gap-6 md:grid-cols-3">
-        {papers.map(paper => {
-          const link = paper.data.links?.website || paper.data.links?.pdf || '/achievements';
-          const isExternal = link.startsWith('http');
-          return (
-          <a 
-            href={link}
-            target={isExternal ? "_blank" : undefined}
-            rel={isExternal ? "noopener noreferrer" : undefined} 
-            class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all hover:-translate-y-1 overflow-hidden flex flex-col h-full group"
+      {
+        latestNews.length > 0 ? (
+          <div class="relative ml-2 border-l border-gray-200">
+            {latestNews.map((entry) => {
+              const slug = getNewsSlug(entry);
+              const newsUrl = `/news/${slug}`;
+
+              return (
+                <article
+                  class="relative pb-10 pl-8 last:pb-0 sm:pl-10"
+                >
+                  <span
+                    class="absolute -left-[7px] top-1.5 h-3.5 w-3.5 rounded-full border-2 border-blue-500 bg-white"
+                    aria-hidden="true"
+                  />
+
+                  <time
+                    datetime={entry.data.date.toISOString()}
+                    class="block text-sm font-medium tabular-nums text-gray-400"
+                  >
+                    {formatNewsDate(entry.data.date)}
+                  </time>
+
+                  <h3
+                    class="mt-2 text-xl font-semibold leading-snug text-gray-900 sm:text-2xl"
+                  >
+                    {
+                      entry.data.readMore ? (
+                        <a
+                          href={newsUrl}
+                          class="transition-colors hover:text-blue-600"
+                        >
+                          {entry.data.title}
+                        </a>
+                      ) : (
+                        entry.data.title
+                      )
+                    }
+                  </h3>
+
+                  <p
+                    class="mt-2 text-base leading-7 text-gray-600"
+                  >
+                    {entry.data.summary}
+                  </p>
+
+                  {
+                    entry.data.readMore && (
+                      <a
+                        href={newsUrl}
+                        aria-label={`Read more about ${entry.data.title}`}
+                        class="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700"
+                      >
+                        Read more
+                        <ArrowRight className="h-4 w-4" />
+                      </a>
+                    )
+                  }
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div
+            class="rounded-2xl border border-gray-100 bg-gray-50 px-6 py-12 text-center text-gray-500"
           >
-             {paper.data.cover && (
-               <div class="h-48 overflow-hidden border-b border-gray-100 bg-gray-50">
-                 <Image 
-                   src={paper.data.cover} 
-                   alt={paper.data.title}
-                   class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                   quality={60}
-                   format="webp"
-                   widths={[320, 480]}
-                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                 />
-               </div>
-             )}
-             <div class="p-6 flex flex-col flex-grow">
-               <h3 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                 {paper.data.title}
-               </h3>
-               <p class="text-gray-600 mb-4 text-sm line-clamp-2 flex-grow" title={paper.data.authors.join(', ')}>
-                 {paper.data.authors.length > 3 
-                   ? `${paper.data.authors.slice(0, 3).join(', ')}, et al.` 
-                   : paper.data.authors.join(', ')}
-               </p>
-               <div class="flex items-center justify-between text-sm mt-auto gap-4">
-                  <span class="font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded truncate text-left block max-w-full" title={paper.data.venue}>{paper.data.venue}</span>
-                  <span class="text-gray-500 shrink-0">{paper.data.year}</span>
-               </div>
-             </div>
-          </a>
-        )})}
+            No news has been posted yet.
+          </div>
+        )
+      }
+
+      <div class="mt-8 sm:hidden">
+        <a
+          href="/news"
+          class="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700"
+        >
+          View all
+          <ArrowRight className="h-4 w-4" />
+        </a>
       </div>
     </div>
   </section>
 
-  <!-- Latest Activities -->
-  <section class="py-16 bg-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-end mb-8">
-        <h2 class="text-3xl font-bold text-gray-900" data-i18n-key="section.latestNews">Latest Activities</h2>
-        <a href="/activities" class="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 group">
-          <span data-i18n-key="section.viewAll">View all</span> <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+  <!-- =====================================================
+       Research Areas
+       ===================================================== -->
+  <section
+    id="research-areas"
+    class="scroll-mt-24 bg-gray-50 py-16 sm:py-20"
+  >
+    <div
+      class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+    >
+      <div
+        class="mb-10 flex items-end justify-between gap-4"
+      >
+        <div class="max-w-3xl">
+          <h2
+            class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
+          >
+            Research Areas
+          </h2>
+
+          <p
+            class="mt-3 text-base leading-7 text-gray-600"
+          >
+            We develop computational and AI-driven methods
+            for biological, biomedical, scientific, and
+            engineering data.
+          </p>
+        </div>
+
+        <a
+          href="/research"
+          class="hidden items-center gap-1 font-medium text-blue-600 transition-colors hover:text-blue-700 sm:flex"
+        >
+          Explore research
+          <ArrowRight className="h-4 w-4" />
         </a>
       </div>
 
-      <div class="grid gap-8 md:grid-cols-3">
-        {activities.map(item => {
-          const link = `/activities/${item.id.replace(/\.[^/.]+$/, "")}`;
-          return (
-          <div class="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all">
-            {item.data.cover && (
-              <a href={link} class="block h-48 overflow-hidden">
-                <Image 
-                  src={item.data.cover} 
-                  alt={item.data.title}
-                  class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  quality={80}
-                  format="webp"
-                  widths={[320, 480, 600]}
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                />
+      <div
+        class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+      >
+        {
+          researchAreas.map((area) => {
+            const Icon = area.icon;
+
+            return (
+              <a
+                href={area.href}
+                aria-label={`Learn more about ${area.title}`}
+                class="group flex h-full flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-100 hover:shadow-md"
+              >
+                <div
+                  class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-600 group-hover:text-white"
+                >
+                  <Icon className="h-6 w-6" />
+                </div>
+
+                <h3
+                  class="mt-5 min-h-[3.5rem] text-xl font-semibold leading-tight text-gray-900 transition-colors group-hover:text-blue-600"
+                >
+                  {area.title}
+                </h3>
+
+                <p
+                  class="mt-3 text-sm leading-6 text-gray-600"
+                >
+                  {area.description}
+                </p>
+
+                <span
+                  class="mt-auto inline-flex items-center gap-1 pt-5 text-sm font-semibold text-blue-600"
+                >
+                  Learn more
+
+                  <ArrowRight
+                    className="h-4 w-4 transition-transform group-hover:translate-x-1"
+                  />
+                </span>
               </a>
-            )}
-            <div class="p-6">
-              <div class="text-sm text-gray-500 mb-2 flex items-center gap-2">
-                 <Calendar className="w-4 h-4" />
-                 {item.data.date.toLocaleDateString()}
-              </div>
-              <h3 class="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-2 line-clamp-2">
-                <a href={link}>{item.data.title}</a>
-              </h3>
-              <p class="text-gray-600 line-clamp-3 text-sm">{item.data.description || (item.body || '').substring(0, 100)}</p>
+            );
+          })
+        }
+      </div>
+
+      <div class="mt-8 sm:hidden">
+        <a
+          href="/research"
+          class="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700"
+        >
+          Explore research
+          <ArrowRight className="h-4 w-4" />
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================
+       Join MIDAS Lab
+       ===================================================== -->
+  <section
+    id="join"
+    class="scroll-mt-24 bg-white py-16 sm:py-20"
+  >
+    <div
+      class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+    >
+      <div
+        class="overflow-hidden rounded-3xl bg-gray-900 px-6 py-12 text-white shadow-xl sm:px-10 lg:px-14 lg:py-16"
+      >
+        <div
+          class="grid items-center gap-10 lg:grid-cols-[1fr_auto]"
+        >
+          <div class="max-w-3xl">
+            <div
+              class="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-blue-300"
+            >
+              <GraduationCap className="h-7 w-7" />
             </div>
+
+            <h2
+              class="mt-6 text-3xl font-bold tracking-tight sm:text-4xl"
+            >
+              Join MIDAS Lab
+            </h2>
+
+            <p
+              class="mt-4 text-lg leading-8 text-gray-300"
+            >
+              We welcome inquiries from graduate students and
+              undergraduate researchers interested in
+              bioinformatics, healthcare AI, and AI for
+              science and engineering.
+            </p>
+
+            <div
+              class="mt-6 inline-flex items-center rounded-full border border-gray-600 bg-white/5 px-4 py-2 text-sm font-medium text-gray-300"
+            >
+              Please contact us for current availability.
+            </div>
+
+            <p
+              class="mt-5 leading-7 text-gray-400"
+            >
+              Students from biomedical engineering, computer
+              science, artificial intelligence, and related
+              fields are encouraged to contact us.
+            </p>
           </div>
-        )})}
+
+          <div
+            class="flex flex-col gap-3 sm:flex-row lg:flex-col"
+          >
+            <a
+              href="/contact"
+              class="inline-flex min-w-[190px] items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 font-semibold text-gray-900 transition-colors hover:bg-gray-100"
+            >
+              <Mail className="h-5 w-5" />
+              Contact Us
+            </a>
+
+            <a
+              href="/people"
+              class="inline-flex min-w-[190px] items-center justify-center gap-2 rounded-full border border-white/30 px-6 py-3.5 font-semibold text-white transition-colors hover:bg-white/10"
+            >
+              Meet the Team
+              <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   </section>

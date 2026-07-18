@@ -1,0 +1,1057 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+import {
+  ArrowUp,
+  BookOpen,
+  Code2,
+  Download,
+  ExternalLink,
+  FileText,
+  Github,
+} from 'lucide-react';
+
+const softwares = await getCollection(
+  'softwares',
+  ({ data }) => data.published
+);
+
+type SoftwareEntry = (typeof softwares)[number];
+
+/**
+ * Software의 대표 연도를 결정합니다.
+ *
+ * 1순위: 최상위 year
+ * 2순위: paper.year
+ * 둘 다 없으면 0으로 처리하여 마지막에 배치합니다.
+ */
+function getSoftwareYear(software: SoftwareEntry): number {
+  return software.data.year ?? software.data.paper?.year ?? 0;
+}
+
+/**
+ * Featured Software는 MD 파일의 order 값을 기준으로 정렬합니다.
+ */
+const featuredSoftware = softwares
+  .filter((software) => software.data.featured)
+  .sort((a, b) => {
+    if (a.data.order !== b.data.order) {
+      return a.data.order - b.data.order;
+    }
+
+    return a.data.title.localeCompare(b.data.title);
+  });
+
+/**
+ * All Software에는 Featured Software도 포함합니다.
+ *
+ * 정렬 기준:
+ * 1. 연도 내림차순
+ * 2. order 오름차순
+ * 3. 제목 알파벳순
+ */
+const allSoftware = [...softwares].sort((a, b) => {
+  const yearDifference =
+    getSoftwareYear(b) - getSoftwareYear(a);
+
+  if (yearDifference !== 0) {
+    return yearDifference;
+  }
+
+  if (a.data.order !== b.data.order) {
+    return a.data.order - b.data.order;
+  }
+
+  return a.data.title.localeCompare(b.data.title);
+});
+
+/**
+ * 연도별 Software 그룹을 만듭니다.
+ */
+const softwareByYear = Object.entries(
+  allSoftware.reduce<Record<string, SoftwareEntry[]>>(
+    (groups, software) => {
+      const year = getSoftwareYear(software);
+      const yearKey = year > 0 ? String(year) : 'Earlier';
+
+      if (!groups[yearKey]) {
+        groups[yearKey] = [];
+      }
+
+      groups[yearKey].push(software);
+
+      return groups;
+    },
+    {}
+  )
+).sort(([yearA], [yearB]) => {
+  if (yearA === 'Earlier') return 1;
+  if (yearB === 'Earlier') return -1;
+
+  return Number(yearB) - Number(yearA);
+});
+
+/**
+ * 현재 등록된 카테고리 목록입니다.
+ * 카테고리가 2개 이상일 때만 필터를 표시합니다.
+ */
+const categories = [
+  ...new Set(
+    softwares.map((software) => software.data.category)
+  ),
+].sort((a, b) => a.localeCompare(b));
+
+const showCategoryFilter = categories.length > 1;
+
+/**
+ * Software 제목에 적용할 대표 링크입니다.
+ */
+function getPrimaryLink(software: SoftwareEntry) {
+  return (
+    software.data.links?.website ??
+    software.data.links?.demo ??
+    software.data.links?.github ??
+    software.data.links?.documentation
+  );
+}
+
+/**
+ * Website 또는 Demo 링크를 반환합니다.
+ */
+function getApplicationLink(software: SoftwareEntry) {
+  return (
+    software.data.links?.website ??
+    software.data.links?.demo
+  );
+}
+---
+
+<Layout title="Software">
+  <main
+    id="software-page-top"
+    class="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-20"
+  >
+    <header class="mb-14 max-w-3xl">
+      <h1
+        class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl"
+      >
+        Software
+      </h1>
+
+      <p class="mt-4 text-lg leading-8 text-gray-600">
+        Research software and computational tools developed by MIDAS Lab.
+      </p>
+    </header>
+
+    {
+      softwares.length === 0 ? (
+        <section
+          class="flex min-h-[360px] items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 py-16 text-center"
+        >
+          <div class="max-w-xl">
+            <div
+              class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600"
+            >
+              <Code2 class="h-7 w-7" />
+            </div>
+
+            <h2 class="mt-6 text-2xl font-bold text-gray-900">
+              No Software Entries Found
+            </h2>
+
+            <p class="mt-4 leading-7 text-gray-600">
+              Add published software entries to
+              <code
+                class="mx-1 rounded bg-gray-100 px-2 py-1 text-sm"
+              >
+                src/content/softwares/
+              </code>
+              to display them here.
+            </p>
+          </div>
+        </section>
+      ) : (
+        <>
+          {
+            featuredSoftware.length > 0 && (
+              <section
+                class="mb-20"
+                aria-labelledby="featured-software-heading"
+              >
+                <div class="mb-8">
+                  <p
+                    class="text-sm font-semibold uppercase tracking-[0.18em] text-blue-600"
+                  >
+                    Selected projects
+                  </p>
+
+                  <h2
+                    id="featured-software-heading"
+                    class="mt-2 text-3xl font-bold tracking-tight text-gray-900"
+                  >
+                    Featured Software
+                  </h2>
+
+                  <p class="mt-3 max-w-3xl text-gray-600">
+                    Selected software and computational resources
+                    developed by MIDAS Lab.
+                  </p>
+                </div>
+
+                <div class="grid gap-6 lg:grid-cols-3">
+                  {
+                    featuredSoftware.map((software) => {
+                      const primaryLink =
+                        getPrimaryLink(software);
+
+                      const applicationLink =
+                        getApplicationLink(software);
+
+                      return (
+                        <article
+                          class="flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-md"
+                        >
+                          <div
+                            class="flex items-start justify-between gap-4"
+                          >
+                            <div>
+                              <p
+                                class="text-sm font-semibold text-blue-600"
+                              >
+                                {software.data.type}
+                              </p>
+
+                              <h3
+                                class="mt-2 text-2xl font-bold tracking-tight text-gray-900"
+                              >
+                                {
+                                  primaryLink ? (
+                                    <a
+                                      href={primaryLink}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      class="transition hover:text-blue-600"
+                                    >
+                                      {software.data.title}
+                                    </a>
+                                  ) : (
+                                    software.data.title
+                                  )
+                                }
+                              </h3>
+                            </div>
+
+                            {
+                              getSoftwareYear(software) >
+                                0 && (
+                                <span
+                                  class="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600"
+                                >
+                                  {getSoftwareYear(software)}
+                                </span>
+                              )
+                            }
+                          </div>
+
+                          <p
+                            class="mt-4 flex-1 leading-7 text-gray-600"
+                          >
+                            {software.data.description}
+                          </p>
+
+                          {
+                            software.data.languages &&
+                            software.data.languages.length >
+                              0 && (
+                              <div
+                                class="mt-5 flex flex-wrap gap-2"
+                              >
+                                {
+                                  software.data.languages.map(
+                                    (language) => (
+                                      <span
+                                        class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600"
+                                      >
+                                        {language}
+                                      </span>
+                                    )
+                                  )
+                                }
+                              </div>
+                            )
+                          }
+
+                          {
+                            software.data.paper && (
+                              <div
+                                class="mt-6 rounded-xl bg-gray-50 p-4"
+                              >
+                                <p
+                                  class="text-sm font-semibold leading-6 text-gray-800"
+                                >
+                                  {software.data.paper.title}
+                                </p>
+
+                                <p
+                                  class="mt-1 text-sm text-gray-500"
+                                >
+                                  {
+                                    software.data.paper
+                                      .venue
+                                  }
+                                  ,{' '}
+                                  {
+                                    software.data.paper
+                                      .year
+                                  }
+                                </p>
+                              </div>
+                            )
+                          }
+
+                          <div
+                            class="mt-6 flex flex-wrap gap-3"
+                          >
+                            {
+                              software.data.links
+                                ?.github && (
+                                <a
+                                  href={
+                                    software.data.links
+                                      .github
+                                  }
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
+                                >
+                                  <Github class="h-4 w-4" />
+                                  GitHub
+                                </a>
+                              )
+                            }
+
+                            {
+                              applicationLink && (
+                                <a
+                                  href={applicationLink}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-blue-300 hover:text-blue-600"
+                                >
+                                  <ExternalLink
+                                    class="h-4 w-4"
+                                  />
+                                  Launch App
+                                </a>
+                              )
+                            }
+
+                            {
+                              software.data.paper && (
+                                <a
+                                  href={
+                                    software.data.paper.url
+                                  }
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-blue-300 hover:text-blue-600"
+                                >
+                                  <FileText class="h-4 w-4" />
+                                  Paper
+                                </a>
+                              )
+                            }
+                          </div>
+                        </article>
+                      );
+                    })
+                  }
+                </div>
+              </section>
+            )
+          }
+
+          <section aria-labelledby="all-software-heading">
+            <div class="mb-8">
+              <p
+                class="text-sm font-semibold uppercase tracking-[0.18em] text-blue-600"
+              >
+                Research outputs
+              </p>
+
+              <div
+                class="mt-2 flex flex-wrap items-center gap-3"
+              >
+                <h2
+                  id="all-software-heading"
+                  class="text-3xl font-bold tracking-tight text-gray-900"
+                >
+                  All Software
+                </h2>
+
+                <span
+                  class="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600"
+                >
+                  {allSoftware.length}{' '}
+                  {
+                    allSoftware.length === 1
+                      ? 'project'
+                      : 'projects'
+                  }
+                </span>
+              </div>
+
+              <p class="mt-3 max-w-3xl text-gray-600">
+                Browse software, source code, web applications,
+                pipelines, and computational resources.
+              </p>
+
+              <nav
+                aria-label="Software by year"
+                class="mt-6 flex flex-wrap gap-2"
+              >
+                {
+                  softwareByYear.map(([year, entries]) => (
+                    <a
+                      href={`#software-${year.toLowerCase()}`}
+                      class="software-year-link inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
+                      data-year-link={year}
+                    >
+                      <span>{year}</span>
+
+                      <span
+                        class="software-year-link-count text-xs font-medium text-gray-400"
+                      >
+                        {entries.length}
+                      </span>
+                    </a>
+                  ))
+                }
+              </nav>
+            </div>
+
+            {
+              showCategoryFilter && (
+                <div
+                  class="mb-10 border-y border-gray-100 py-5"
+                >
+                  <p
+                    class="mb-3 text-sm font-semibold text-gray-700"
+                  >
+                    Filter by category
+                  </p>
+
+                  <div
+                    class="flex flex-wrap gap-2"
+                    role="group"
+                    aria-label="Filter software by category"
+                  >
+                    <button
+                      type="button"
+                      class="software-filter rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition"
+                      data-category="all"
+                      aria-pressed="true"
+                    >
+                      All
+                    </button>
+
+                    {
+                      categories.map((category) => (
+                        <button
+                          type="button"
+                          class="software-filter rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 transition hover:border-blue-300 hover:text-blue-600"
+                          data-category={category}
+                          aria-pressed="false"
+                        >
+                          {category}
+                        </button>
+                      ))
+                    }
+                  </div>
+                </div>
+              )
+            }
+
+            <div
+              id="software-grid"
+              class="space-y-14"
+            >
+              {
+                softwareByYear.map(([year, entries]) => (
+                  <section
+                    id={`software-${year.toLowerCase()}`}
+                    class="software-year-section scroll-mt-28"
+                    data-software-year={year}
+                  >
+                    <div
+                      class="mb-6 flex items-center gap-4"
+                    >
+                      <h3
+                        class="shrink-0 text-xl font-bold tracking-tight text-gray-900 sm:text-2xl"
+                      >
+                        {year}
+                      </h3>
+
+                      <div
+                        class="h-px flex-1 bg-gray-200"
+                        aria-hidden="true"
+                      />
+
+                      <span
+                        class="software-year-count shrink-0 text-sm text-gray-500"
+                      >
+                        {entries.length}{' '}
+                        {
+                          entries.length === 1
+                            ? 'project'
+                            : 'projects'
+                        }
+                      </span>
+                    </div>
+
+                    <div
+                      class="grid gap-6 md:grid-cols-2"
+                    >
+                      {
+                        entries.map((software) => {
+                          const primaryLink =
+                            getPrimaryLink(software);
+
+                          const applicationLink =
+                            getApplicationLink(software);
+
+                          return (
+                            <article
+                              class="software-card flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition duration-200 hover:shadow-md"
+                              data-category={
+                                software.data.category
+                              }
+                              data-year={year}
+                            >
+                              <div
+                                class="flex items-start justify-between gap-4"
+                              >
+                                <div>
+                                  <p
+                                    class="text-sm font-semibold text-blue-600"
+                                  >
+                                    {software.data.type}
+                                  </p>
+
+                                  <h4
+                                    class="mt-2 text-xl font-bold text-gray-900 sm:text-2xl"
+                                  >
+                                    {
+                                      primaryLink ? (
+                                        <a
+                                          href={
+                                            primaryLink
+                                          }
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          class="transition hover:text-blue-600"
+                                        >
+                                          {
+                                            software.data
+                                              .title
+                                          }
+                                        </a>
+                                      ) : (
+                                        software.data.title
+                                      )
+                                    }
+                                  </h4>
+                                </div>
+
+                                <span
+                                  class="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600"
+                                >
+                                  {software.data.status}
+                                </span>
+                              </div>
+
+                              <p
+                                class="mt-4 flex-1 leading-7 text-gray-600"
+                              >
+                                {
+                                  software.data
+                                    .description
+                                }
+                              </p>
+
+                              {
+                                software.data
+                                  .developers &&
+                                software.data.developers
+                                  .length > 0 && (
+                                  <p
+                                    class="mt-4 text-sm leading-6 text-gray-500"
+                                  >
+                                    <span
+                                      class="font-semibold text-gray-700"
+                                    >
+                                      Developers:
+                                    </span>{' '}
+                                    {
+                                      software.data.developers.join(
+                                        ', '
+                                      )
+                                    }
+                                  </p>
+                                )
+                              }
+
+                              {
+                                software.data.languages &&
+                                software.data.languages
+                                  .length > 0 && (
+                                  <div
+                                    class="mt-4 flex flex-wrap gap-2"
+                                  >
+                                    {
+                                      software.data.languages.map(
+                                        (language) => (
+                                          <span
+                                            class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600"
+                                          >
+                                            {language}
+                                          </span>
+                                        )
+                                      )
+                                    }
+                                  </div>
+                                )
+                              }
+
+                              {
+                                software.data.paper && (
+                                  <div
+                                    class="mt-6 rounded-xl bg-gray-50 p-4"
+                                  >
+                                    <p
+                                      class="text-sm font-semibold leading-6 text-gray-800 sm:text-base"
+                                    >
+                                      {
+                                        software.data
+                                          .paper.title
+                                      }
+                                    </p>
+
+                                    <p
+                                      class="mt-1 text-sm text-gray-500"
+                                    >
+                                      {
+                                        software.data
+                                          .paper.venue
+                                      }
+                                      ,{' '}
+                                      {
+                                        software.data
+                                          .paper.year
+                                      }
+                                    </p>
+                                  </div>
+                                )
+                              }
+
+                              <div
+                                class="mt-6 flex flex-wrap gap-3"
+                              >
+                                {
+                                  software.data.links
+                                    ?.github && (
+                                    <a
+                                      href={
+                                        software.data
+                                          .links.github
+                                      }
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
+                                    >
+                                      <Github
+                                        class="h-4 w-4"
+                                      />
+                                      GitHub
+                                    </a>
+                                  )
+                                }
+
+                                {
+                                  applicationLink && (
+                                    <a
+                                      href={
+                                        applicationLink
+                                      }
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-blue-300 hover:text-blue-600"
+                                    >
+                                      <ExternalLink
+                                        class="h-4 w-4"
+                                      />
+                                      Launch App
+                                    </a>
+                                  )
+                                }
+
+                                {
+                                  software.data.links
+                                    ?.documentation && (
+                                    <a
+                                      href={
+                                        software.data
+                                          .links
+                                          .documentation
+                                      }
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-blue-300 hover:text-blue-600"
+                                    >
+                                      <BookOpen
+                                        class="h-4 w-4"
+                                      />
+                                      Docs
+                                    </a>
+                                  )
+                                }
+
+                                {
+                                  software.data.links
+                                    ?.download && (
+                                    <a
+                                      href={
+                                        software.data
+                                          .links.download
+                                      }
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-blue-300 hover:text-blue-600"
+                                    >
+                                      <Download
+                                        class="h-4 w-4"
+                                      />
+                                      Download
+                                    </a>
+                                  )
+                                }
+
+                                {
+                                  software.data.paper && (
+                                    <a
+                                      href={
+                                        software.data
+                                          .paper.url
+                                      }
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-blue-300 hover:text-blue-600"
+                                    >
+                                      <FileText
+                                        class="h-4 w-4"
+                                      />
+                                      Paper
+                                    </a>
+                                  )
+                                }
+                              </div>
+                            </article>
+                          );
+                        })
+                      }
+                    </div>
+                  </section>
+                ))
+              }
+            </div>
+
+            <div
+              id="software-empty-filter-result"
+              class="hidden rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 py-14 text-center"
+            >
+              <p class="font-semibold text-gray-900">
+                No software found
+              </p>
+
+              <p class="mt-2 text-sm text-gray-600">
+                No software entries match the selected category.
+              </p>
+            </div>
+          </section>
+        </>
+      )
+    }
+  </main>
+
+  <button
+    id="back-to-top"
+    type="button"
+    aria-label="Back to top"
+    title="Back to top"
+    class="pointer-events-none fixed bottom-6 right-6 z-50 flex h-12 w-12 translate-y-4 items-center justify-center rounded-full bg-gray-900 text-white opacity-0 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-200"
+  >
+    <ArrowUp class="h-5 w-5" />
+  </button>
+</Layout>
+
+<script>
+  function initializeSoftwarePage() {
+    const filterButtons =
+      document.querySelectorAll<HTMLButtonElement>(
+        '.software-filter'
+      );
+
+    const softwareCards =
+      document.querySelectorAll<HTMLElement>(
+        '.software-card'
+      );
+
+    const yearSections =
+      document.querySelectorAll<HTMLElement>(
+        '.software-year-section'
+      );
+
+    const yearLinks =
+      document.querySelectorAll<HTMLAnchorElement>(
+        '.software-year-link'
+      );
+
+    const emptyFilterResult =
+      document.querySelector<HTMLElement>(
+        '#software-empty-filter-result'
+      );
+
+    const backToTopButton =
+      document.querySelector<HTMLButtonElement>(
+        '#back-to-top'
+      );
+
+    function updateYearSections() {
+      let totalVisibleCards = 0;
+
+      yearSections.forEach((section) => {
+        const cards =
+          section.querySelectorAll<HTMLElement>(
+            '.software-card'
+          );
+
+        const visibleCards = Array.from(cards).filter(
+          (card) => !card.classList.contains('hidden')
+        );
+
+        const visibleCount = visibleCards.length;
+        totalVisibleCards += visibleCount;
+
+        section.classList.toggle(
+          'hidden',
+          visibleCount === 0
+        );
+
+        const countElement =
+          section.querySelector<HTMLElement>(
+            '.software-year-count'
+          );
+
+        if (countElement) {
+          countElement.textContent = `${visibleCount} ${
+            visibleCount === 1 ? 'project' : 'projects'
+          }`;
+        }
+
+        const year = section.dataset.softwareYear;
+        const matchingYearLink = Array.from(
+          yearLinks
+        ).find(
+          (link) => link.dataset.yearLink === year
+        );
+
+        if (matchingYearLink) {
+          matchingYearLink.classList.toggle(
+            'hidden',
+            visibleCount === 0
+          );
+
+          const linkCount =
+            matchingYearLink.querySelector<HTMLElement>(
+              '.software-year-link-count'
+            );
+
+          if (linkCount) {
+            linkCount.textContent =
+              String(visibleCount);
+          }
+        }
+      });
+
+      emptyFilterResult?.classList.toggle(
+        'hidden',
+        totalVisibleCards > 0
+      );
+    }
+
+    function setActiveFilter(
+      activeButton: HTMLButtonElement
+    ) {
+      filterButtons.forEach((button) => {
+        const isActive = button === activeButton;
+
+        button.setAttribute(
+          'aria-pressed',
+          String(isActive)
+        );
+
+        button.classList.toggle(
+          'bg-gray-900',
+          isActive
+        );
+
+        button.classList.toggle(
+          'text-white',
+          isActive
+        );
+
+        button.classList.toggle(
+          'border',
+          !isActive
+        );
+
+        button.classList.toggle(
+          'border-gray-200',
+          !isActive
+        );
+
+        button.classList.toggle(
+          'bg-white',
+          !isActive
+        );
+
+        button.classList.toggle(
+          'text-gray-600',
+          !isActive
+        );
+      });
+    }
+
+    filterButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const selectedCategory =
+          button.dataset.category ?? 'all';
+
+        setActiveFilter(button);
+
+        softwareCards.forEach((card) => {
+          const cardCategory =
+            card.dataset.category;
+
+          const shouldShow =
+            selectedCategory === 'all' ||
+            selectedCategory === cardCategory;
+
+          card.classList.toggle(
+            'hidden',
+            !shouldShow
+          );
+        });
+
+        updateYearSections();
+      });
+    });
+
+    yearLinks.forEach((link) => {
+      link.addEventListener('click', (event) => {
+        const targetId =
+          link.getAttribute('href');
+
+        if (!targetId?.startsWith('#')) {
+          return;
+        }
+
+        const target =
+          document.querySelector<HTMLElement>(
+            targetId
+          );
+
+        if (!target) {
+          return;
+        }
+
+        event.preventDefault();
+
+        target.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+
+        history.replaceState(
+          null,
+          '',
+          targetId
+        );
+      });
+    });
+
+    function updateBackToTopButton() {
+      if (!backToTopButton) {
+        return;
+      }
+
+      const shouldShow = window.scrollY > 500;
+
+      backToTopButton.classList.toggle(
+        'opacity-0',
+        !shouldShow
+      );
+
+      backToTopButton.classList.toggle(
+        'translate-y-4',
+        !shouldShow
+      );
+
+      backToTopButton.classList.toggle(
+        'pointer-events-none',
+        !shouldShow
+      );
+
+      backToTopButton.classList.toggle(
+        'opacity-100',
+        shouldShow
+      );
+
+      backToTopButton.classList.toggle(
+        'translate-y-0',
+        shouldShow
+      );
+
+      backToTopButton.classList.toggle(
+        'pointer-events-auto',
+        shouldShow
+      );
+    }
+
+    backToTopButton?.addEventListener(
+      'click',
+      () => {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth',
+        });
+      }
+    );
+
+    window.addEventListener(
+      'scroll',
+      updateBackToTopButton,
+      { passive: true }
+    );
+
+    updateYearSections();
+    updateBackToTopButton();
+  }
+
+  initializeSoftwarePage();
+
+  document.addEventListener(
+    'astro:page-load',
+    initializeSoftwarePage
+  );
+</script>

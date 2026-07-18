@@ -1,55 +1,368 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { getCollection } from 'astro:content';
-import { ArrowRight } from 'lucide-react';
+import { getCollection, render } from 'astro:content';
+import {
+  Activity,
+  ArrowDown,
+  ArrowUp,
+  BrainCircuit,
+  Dna,
+  Share2,
+} from 'lucide-react';
 
-const researchAreas = (await getCollection('research')).sort((a, b) => a.data.order - b.data.order);
+/*
+ * 공개된 연구 분야를 order 순서대로 불러옵니다.
+ */
+const researchEntries = (await getCollection('research'))
+  .filter((entry) => entry.data.published !== false)
+  .sort((a, b) => a.data.order - b.data.order);
+
+/*
+ * 각 Markdown 파일의 본문을 Astro 컴포넌트로 변환합니다.
+ */
+const renderedResearch = await Promise.all(
+  researchEntries.map(async (entry) => {
+    const { Content } = await render(entry);
+
+    return {
+      entry,
+      Content,
+    };
+  })
+);
+
+/*
+ * 각 대분류의 slug와 Lucide 아이콘을 연결합니다.
+ */
+const researchIcons = {
+  bioinformatics: Dna,
+  'healthcare-ai': Activity,
+  'ai-for-science-engineering': Share2,
+};
+
+const getResearchIcon = (slug: string) =>
+  researchIcons[slug as keyof typeof researchIcons] ?? BrainCircuit;
 ---
 
 <Layout title="Research">
-  <div class="max-w-7xl mx-auto px-4 py-12 sm:py-20">
-    <div class="max-w-3xl mx-auto text-center mb-16">
-      <h1 class="text-4xl font-bold text-gray-900 mb-4" data-i18n-key="nav.research">Research Areas</h1>
-      <p class="text-lg text-gray-600" data-i18n-key="research.subtitle">
-        Our lab explores the frontiers of artificial intelligence, with a focus on computer vision and machine learning.
-      </p>
-    </div>
+  <main id="top" class="bg-white">
+    <!-- =====================================================
+         Page Header
+         ===================================================== -->
+    <section
+      class="border-b border-gray-200 bg-gray-50 pb-16 pt-32 sm:pb-20 sm:pt-36"
+    >
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl">
+          <p
+            class="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600"
+          >
+            MIDAS Lab
+          </p>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {researchAreas.map(area => (
-        <div class="group relative bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300">
-          {area.data.cover && (
-            <div class="h-48 overflow-hidden bg-gray-100">
-              <img 
-                src={area.data.cover.src} 
-                alt={area.data.title} 
-                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-            </div>
-          )}
-          
-          <div class="p-6">
-            <h2 class="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-              {area.data.title}
-            </h2>
-            <p class="text-gray-600 text-sm mb-4 line-clamp-3">
-              {area.data.description}
-            </p>
-            <a 
-              href={`/research/${area.id.replace(/\.[^/.]+$/, "")}`} 
-              class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700"
-            >
-              <span data-i18n-key="research.learnMore">Learn more</span> <ArrowRight className="ml-1 w-4 h-4" />
-            </a>
-          </div>
+          <h1
+            class="mt-4 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl"
+          >
+            Research
+          </h1>
+
+          <p
+            class="mt-6 max-w-4xl text-lg leading-8 text-gray-600 sm:text-xl"
+          >
+            We develop computational and artificial intelligence methods
+            for biological, biomedical, scientific, and engineering data.
+            Our research combines algorithm development, data analysis,
+            and interdisciplinary applications.
+          </p>
         </div>
-      ))}
-    </div>
-
-    {researchAreas.length === 0 && (
-      <div class="text-center py-20">
-        <p class="text-gray-500" data-i18n-key="research.noAreas">No research areas defined. Add markdown files to src/content/research/</p>
       </div>
-    )}
-  </div>
+    </section>
+
+    <!-- =====================================================
+         Research Area Navigation
+         ===================================================== -->
+    <section class="bg-white py-14 sm:py-16">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div>
+          <h2
+            class="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl"
+          >
+            Research Areas
+          </h2>
+
+          <p class="mt-3 text-base leading-7 text-gray-600">
+            Select a research area to move directly to its section.
+          </p>
+        </div>
+
+        {
+          researchEntries.length > 0 ? (
+            <div class="mt-8 grid gap-6 md:grid-cols-3">
+              {researchEntries.map((entry) => {
+                const Icon = getResearchIcon(entry.data.slug);
+
+                return (
+                  <a
+                    href={`#${entry.data.slug}`}
+                    class="group flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-md"
+                  >
+                    <div
+                      class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-600 group-hover:text-white"
+                    >
+                      <Icon className="h-6 w-6" />
+                    </div>
+
+                    <h3
+                      class="mt-5 text-xl font-semibold leading-tight text-gray-900 transition-colors group-hover:text-blue-600"
+                    >
+                      {entry.data.title}
+                    </h3>
+
+                    <p class="mt-3 flex-1 text-sm leading-6 text-gray-600">
+                      {entry.data.description}
+                    </p>
+
+                    <span
+                      class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-blue-600"
+                    >
+                      Explore this area
+
+                      <ArrowDown
+                        className="h-4 w-4 transition-transform group-hover:translate-y-1"
+                      />
+                    </span>
+                  </a>
+                );
+              })}
+            </div>
+          ) : (
+            <div
+              class="mt-8 rounded-2xl border border-gray-200 bg-gray-50 px-6 py-12 text-center text-gray-500"
+            >
+              No research areas have been published yet.
+            </div>
+          )
+        }
+      </div>
+    </section>
+
+    <!-- =====================================================
+         Research Detail Sections
+         ===================================================== -->
+    {
+      renderedResearch.map(({ entry, Content }, index) => {
+        const Icon = getResearchIcon(entry.data.slug);
+        const sectionBackground =
+          index % 2 === 0 ? 'bg-gray-50' : 'bg-white';
+
+        return (
+          <section
+            id={entry.data.slug}
+            class:list={[
+              'scroll-mt-24 border-t border-gray-200 py-16 sm:py-20 lg:py-24',
+              sectionBackground,
+            ]}
+          >
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div
+                class="grid gap-12 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.5fr)] lg:gap-20"
+              >
+                <!-- 왼쪽: 대분류 제목과 소개 -->
+                <div class="lg:sticky lg:top-28 lg:self-start">
+                  <div
+                    class="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm"
+                  >
+                    <Icon className="h-7 w-7" />
+                  </div>
+
+                  <h2
+                    class="mt-6 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
+                  >
+                    {entry.data.title}
+                  </h2>
+
+                  <p class="mt-5 text-base leading-8 text-gray-600">
+                    {entry.data.description}
+                  </p>
+
+                  <a
+                    href="#top"
+                    class="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700"
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                    Back to top
+                  </a>
+                </div>
+
+                <!-- 오른쪽: Markdown 하위 연구 분야 -->
+                <div class="research-content min-w-0">
+                  <Content />
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      })
+    }
+  </main>
 </Layout>
+
+<style>
+  /*
+   * Markdown 본문은 h2, p, ul 등이 순서대로 생성됩니다.
+   * 부모 요소에 Grid를 적용하지 않고 세로 흐름을 유지하여
+   * 제목과 관련 문단이 서로 분리되지 않도록 합니다.
+   */
+
+  .research-content {
+    min-width: 0;
+  }
+
+  /*
+   * 각 하위 연구 분야 제목
+   */
+  .research-content :global(h2) {
+    margin: 0;
+    border-top: 1px solid rgb(229 231 235);
+    padding-top: 2.25rem;
+
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+    color: rgb(17 24 39);
+  }
+
+  .research-content :global(h2:first-child) {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .research-content :global(h2:not(:first-child)) {
+    margin-top: 2.75rem;
+  }
+
+  /*
+   * 하위 연구 분야 설명 문단
+   */
+  .research-content :global(p) {
+    margin: 0.9rem 0 0;
+    max-width: 52rem;
+
+    font-size: 1rem;
+    line-height: 1.8;
+    color: rgb(75 85 99);
+  }
+
+  /*
+   * Markdown에 h3를 사용할 경우
+   */
+  .research-content :global(h3) {
+    margin: 1.75rem 0 0;
+
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.5;
+    color: rgb(31 41 55);
+  }
+
+  /*
+   * 목록
+   */
+  .research-content :global(ul),
+  .research-content :global(ol) {
+    margin: 1rem 0 0;
+    max-width: 52rem;
+    padding-left: 1.5rem;
+
+    color: rgb(75 85 99);
+  }
+
+  .research-content :global(ul) {
+    list-style-type: disc;
+  }
+
+  .research-content :global(ol) {
+    list-style-type: decimal;
+  }
+
+  .research-content :global(li) {
+    margin-top: 0.5rem;
+    padding-left: 0.2rem;
+
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+
+  /*
+   * 링크
+   */
+  .research-content :global(a) {
+    font-weight: 600;
+    color: rgb(37 99 235);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+
+  .research-content :global(a:hover) {
+    color: rgb(29 78 216);
+  }
+
+  /*
+   * 강조와 인라인 코드
+   */
+  .research-content :global(strong) {
+    font-weight: 700;
+    color: rgb(31 41 55);
+  }
+
+  .research-content :global(code) {
+    border-radius: 0.375rem;
+    background: rgb(243 244 246);
+    padding: 0.15rem 0.35rem;
+
+    font-size: 0.9em;
+    color: rgb(31 41 55);
+  }
+
+  /*
+   * 인용문
+   */
+  .research-content :global(blockquote) {
+    margin: 1.5rem 0 0;
+    max-width: 52rem;
+    border-left: 3px solid rgb(147 197 253);
+    padding-left: 1.25rem;
+
+    color: rgb(75 85 99);
+  }
+
+  /*
+   * 이미지가 나중에 Markdown에 추가되었을 때의 기본 스타일
+   */
+  .research-content :global(img) {
+    margin-top: 1.75rem;
+    height: auto;
+    max-width: 100%;
+    border-radius: 1rem;
+  }
+
+  /*
+   * 모바일에서는 섹션 간격과 글자 크기를 조금 줄입니다.
+   */
+  @media (max-width: 639px) {
+    .research-content :global(h2) {
+      font-size: 1.2rem;
+    }
+
+    .research-content :global(h2:not(:first-child)) {
+      margin-top: 2.25rem;
+    }
+
+    .research-content :global(p),
+    .research-content :global(li) {
+      font-size: 0.95rem;
+    }
+  }
+</style>

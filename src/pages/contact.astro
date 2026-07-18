@@ -1,0 +1,186 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const email = 'hdj@inu.ac.kr';
+
+const googleMapsEmbedUrl =
+  'https://www.google.com/maps/embed?pb=!1m5!3m3!1m2!1s0x357b773dd21f6c8f%3A0x6b37b89ce45b9016!2z7J247LKc64yA7ZWZ6rWQIOqzteqzvOuMgO2VmQ!5e0!3m2!1sko!2skr!4v1784378677878!5m2!1sko!2skr';
+
+const googleMapsLink =
+  'https://www.google.com/maps/search/?api=1&query=%EC%9D%B8%EC%B2%9C%EB%8C%80%ED%95%99%EA%B5%90+%EA%B3%B5%EA%B3%BC%EB%8C%80%ED%95%99';
+---
+
+<Layout title="Contact">
+  <main class="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-20">
+    <!-- Page header -->
+    <header class="mb-12 max-w-3xl">
+      <h1 class="text-4xl font-bold tracking-tight text-gray-900">
+        Contact
+      </h1>
+
+      <p class="mt-4 text-lg leading-8 text-gray-600">
+        For research collaboration, student opportunities, or general
+        inquiries, please contact MIDAS Lab.
+      </p>
+    </header>
+
+    <!-- Contact and map -->
+    <div
+      class="grid gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-start"
+    >
+      <!-- Contact information -->
+      <section
+        class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm sm:p-8"
+        aria-labelledby="contact-information-heading"
+      >
+        <h2
+          id="contact-information-heading"
+          class="text-2xl font-bold text-gray-900"
+        >
+          Get in Touch
+        </h2>
+
+        <p class="mt-2 leading-7 text-gray-500">
+          Machine Intelligence &amp; Data Science Lab
+        </p>
+
+        <div class="mt-8 space-y-8">
+          <!-- Laboratory -->
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-gray-400"
+            >
+              Laboratory
+            </h3>
+
+            <p class="mt-2 text-lg font-semibold text-gray-900">
+              MIDAS Lab
+            </p>
+
+            <p class="mt-1 leading-7 text-gray-600">
+              Machine Intelligence &amp; Data Science Lab
+            </p>
+          </div>
+
+          <!-- Affiliation -->
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-gray-400"
+            >
+              Affiliation
+            </h3>
+
+            <p class="mt-2 leading-7 text-gray-700">
+              Department of Biomedical and Robotics Engineering
+            </p>
+
+            <p class="leading-7 text-gray-700">
+              Incheon National University
+            </p>
+          </div>
+
+          <!-- Mailing address -->
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-gray-400"
+            >
+              Mailing Address
+            </h3>
+
+            <address class="mt-2 not-italic leading-7 text-gray-700">
+              <p>Engineering Building 8, Wing C, Room 542</p>
+              <p>Incheon National University</p>
+              <p>119 Academy-ro, Yeonsu-gu</p>
+              <p>Incheon 22012, Republic of Korea</p>
+
+              <p class="mt-3 text-sm leading-6 text-gray-500">
+                인천광역시 연수구 아카데미로 119(송도동)<br />
+                인천대학교 공과대학 8호관 C동 542호
+              </p>
+            </address>
+          </div>
+
+          <!-- Email -->
+          <div>
+            <h3
+              class="text-xs font-semibold uppercase tracking-wider text-gray-400"
+            >
+              Email
+            </h3>
+
+            <a
+              href={`mailto:${email}`}
+              class="mt-2 inline-block text-lg font-semibold text-blue-600 transition-colors hover:text-blue-700"
+            >
+              {email}
+            </a>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="mt-10 flex flex-wrap gap-3">
+          <a
+            href={`mailto:${email}`}
+            class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+          >
+            Send Email
+          </a>
+
+          <a
+            href={googleMapsLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center justify-center rounded-lg border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+          >
+            Open in Google Maps
+          </a>
+        </div>
+      </section>
+
+      <!-- Location -->
+      <section aria-labelledby="location-heading">
+        <div class="mb-4">
+          <h2
+            id="location-heading"
+            class="text-2xl font-bold text-gray-900"
+          >
+            Location
+          </h2>
+
+          <p class="mt-2 text-sm leading-6 text-gray-500">
+            College of Engineering, Incheon National University
+          </p>
+        </div>
+
+        <div
+          class="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 shadow-sm"
+        >
+          <iframe
+            src={googleMapsEmbedUrl}
+            width="100%"
+            height="520"
+            style="border: 0;"
+            allowfullscreen
+            loading="eager"
+            referrerpolicy="strict-origin-when-cross-origin"
+            title="Location of MIDAS Lab at Incheon National University"
+            class="block min-h-[440px] w-full"
+          >
+          </iframe>
+        </div>
+
+        <div class="mt-4 flex items-start gap-3 rounded-xl bg-gray-50 px-4 py-3">
+          <div>
+            <p class="text-sm font-semibold text-gray-800">
+              Engineering Building 8
+            </p>
+
+            <p class="mt-1 text-sm leading-6 text-gray-500">
+              MIDAS Lab mailing address: Wing C, Room 542.
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</Layout>

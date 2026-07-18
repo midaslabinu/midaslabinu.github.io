@@ -38,9 +38,9 @@ const rolePriority: Record<string, number> = {
 };
 
 const groupedMembers = groups
-  .map(group => {
+  .map((group) => {
     const members = allMembers
-      .filter(member => group.roles.includes(member.data.role))
+      .filter((member) => group.roles.includes(member.data.role))
       .sort((a, b) => {
         const roleDifference =
           (rolePriority[a.data.role] ?? 99) -
@@ -58,13 +58,17 @@ const groupedMembers = groups
       members,
     };
   })
-  .filter(group => group.members.length > 0);
+  .filter((group) => group.members.length > 0);
 ---
 
 <Layout title="People">
-  <main class="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
+  <main
+    class="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-20 lg:px-8"
+  >
     <header class="mx-auto mb-16 max-w-3xl text-center">
-      <h1 class="mb-4 text-4xl font-bold text-gray-900 dark:text-white">
+      <h1
+        class="mb-4 text-4xl font-bold text-gray-900 dark:text-white"
+      >
         Lab Members
       </h1>
 
@@ -75,17 +79,37 @@ const groupedMembers = groups
 
     <div class="space-y-20">
       {
-        groupedMembers.map(group => (
+        groupedMembers.map((group) => (
           <section id={group.id}>
-            <h2 class="mb-10 border-l-4 border-blue-600 pl-4 text-2xl font-bold text-gray-900 dark:text-white">
+            <h2
+              class="mb-10 border-l-4 border-blue-600 pl-4 text-2xl font-bold text-gray-900 dark:text-white"
+            >
               {group.title}
             </h2>
 
-            <div class="grid grid-cols-1 gap-x-10 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
-              {group.members.map(member => (
-                <PeopleCard member={member} basePath="/people" />
-              ))}
-            </div>
+            {
+              group.id === 'pi' ? (
+                <div class="flex flex-wrap justify-center gap-x-10 gap-y-14">
+                  {group.members.map((member) => (
+                    <div class="w-full max-w-sm">
+                      <PeopleCard
+                        member={member}
+                        basePath="/people"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div class="grid grid-cols-1 gap-x-10 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+                  {group.members.map((member) => (
+                    <PeopleCard
+                      member={member}
+                      basePath="/people"
+                    />
+                  ))}
+                </div>
+              )
+            }
           </section>
         ))
       }
