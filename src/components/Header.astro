@@ -6,34 +6,17 @@ import {
   Globe,
   ChevronDown,
   Check,
-  Home,
-  BookOpen,
-  Trophy,
-  Users,
-  Calendar,
-  UserPlus,
-  Sparkles,
   Search,
 } from 'lucide-react';
 
 import { defaultLang, languages } from '../i18n/ui';
 
 const { nav, i18n, customPages } = SITE;
-
-const iconMap: Record<string, any> = {
-  home: Home,
-  research: BookOpen,
-  achievements: Trophy,
-  team: Users,
-  activities: Calendar,
-  join: UserPlus,
-  search: Search,
-};
-
-const getIcon = (key: string) => iconMap[key] || Sparkles;
 ---
 
 <header
+  id="site-header"
+  data-default-lang={defaultLang}
   class="sticky top-0 z-50 w-full border-b border-gray-100 bg-white/80 backdrop-blur-md transition-colors duration-300"
 >
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -70,7 +53,10 @@ const getIcon = (key: string) => iconMap[key] || Sparkles;
       </div>
 
       <!-- Desktop navigation -->
-      <nav class="hidden items-center gap-6 md:flex">
+      <nav
+        class="hidden items-center gap-6 md:flex"
+        aria-label="Main navigation"
+      >
         {
           nav.map((item) => {
             if (item.key === 'search') {
@@ -85,10 +71,49 @@ const getIcon = (key: string) => iconMap[key] || Sparkles;
               );
             }
 
+            if (item.children?.length) {
+              return (
+                <div class="group relative">
+                  <div class="flex items-center">
+                    <a
+                      href={item.link}
+                      class="py-5 text-sm font-medium text-gray-600 transition-colors hover:text-blue-600 focus:text-blue-600 focus:outline-none"
+                      data-i18n-key={`nav.${item.key}`}
+                    >
+                      {item.text}
+                    </a>
+
+                    <ChevronDown
+                      className="ml-1 h-3.5 w-3.5 text-gray-400 transition-transform duration-200 group-hover:rotate-180 group-focus-within:rotate-180"
+                      aria-hidden="true"
+                    />
+                  </div>
+
+                  <!-- Desktop dropdown -->
+                  <div
+                    class="invisible absolute left-1/2 top-full z-50 w-64 -translate-x-1/2 translate-y-2 pt-2 opacity-0 transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100"
+                  >
+                    <div
+                      class="overflow-hidden rounded-xl border border-gray-100 bg-white py-2 shadow-xl"
+                    >
+                      {item.children.map((child) => (
+                        <a
+                          href={child.link}
+                          class="block px-4 py-2.5 text-sm text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600 focus:bg-blue-50 focus:text-blue-600 focus:outline-none"
+                        >
+                          {child.text}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <a
                 href={item.link}
-                class="text-sm font-medium text-gray-600 transition-colors hover:text-blue-600"
+                class="py-5 text-sm font-medium text-gray-600 transition-colors hover:text-blue-600 focus:text-blue-600 focus:outline-none"
                 data-i18n-key={`nav.${item.key}`}
               >
                 {item.text}
@@ -101,7 +126,7 @@ const getIcon = (key: string) => iconMap[key] || Sparkles;
           customPages?.map((item) => (
             <a
               href={item.link}
-              class="text-sm font-medium text-gray-600 transition-colors hover:text-blue-600"
+              class="py-5 text-sm font-medium text-gray-600 transition-colors hover:text-blue-600 focus:text-blue-600 focus:outline-none"
               data-i18n-key={item.key}
             >
               {item.text}
@@ -129,9 +154,8 @@ const getIcon = (key: string) => iconMap[key] || Sparkles;
                 <ChevronDown className="h-3 w-3 opacity-50" />
               </button>
 
-              <!-- Language dropdown -->
               <div
-                class="absolute right-0 hidden w-40 origin-top-right pt-2 transition-all group-hover:block"
+                class="invisible absolute right-0 w-40 translate-y-2 pt-2 opacity-0 transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100"
               >
                 <div
                   class="rounded-xl border border-gray-100 bg-white py-2 shadow-xl"
@@ -168,9 +192,7 @@ const getIcon = (key: string) => iconMap[key] || Sparkles;
         aria-expanded="false"
         onclick="window.toggleMobileMenu(event)"
       >
-        <span
-          class="icon-menu block transition-transform duration-300"
-        >
+        <span class="icon-menu block transition-transform duration-300">
           <Menu className="h-6 w-6" />
         </span>
 
@@ -228,28 +250,77 @@ const getIcon = (key: string) => iconMap[key] || Sparkles;
 
     <!-- Mobile menu content -->
     <nav
-      class="flex flex-1 flex-col gap-2 overflow-y-auto bg-white px-6 py-8"
+      class="flex flex-1 flex-col gap-1 overflow-y-auto bg-white px-6 py-8"
+      aria-label="Mobile navigation"
     >
       {
-        nav.map((item) => (
-          <a
-            href={item.link}
-            class="flex w-full items-center rounded-xl border-b border-gray-100 px-4 py-4 text-lg font-medium text-gray-800 transition-all hover:bg-gray-50 hover:text-blue-600 last:border-0"
-            data-i18n-key={`nav.${item.key}`}
-            onclick="window.closeMobileMenu()"
-          >
-            <span>{item.text}</span>
-          </a>
-        ))
+        nav.map((item) =>
+          item.children?.length ? (
+            <div
+              class="mobile-nav-group border-b border-gray-100"
+              data-mobile-nav-group
+            >
+              <div class="flex items-center">
+                <!--
+                  Tapping the menu label opens the main page.
+                  Only the arrow button expands or collapses the submenu.
+                -->
+                <a
+                  href={item.link}
+                  class="flex min-h-14 flex-1 items-center rounded-l-xl px-4 py-4 text-lg font-medium text-gray-800 transition-all hover:bg-gray-50 hover:text-blue-600"
+                  data-i18n-key={`nav.${item.key}`}
+                >
+                  {item.text}
+                </a>
+
+                <button
+                  type="button"
+                  class="mobile-submenu-toggle flex min-h-14 min-w-14 items-center justify-center rounded-r-xl text-gray-500 transition-colors hover:bg-gray-50 hover:text-blue-600"
+                  aria-expanded="false"
+                  aria-controls={`mobile-submenu-${item.key}`}
+                  aria-label={`Toggle ${item.text} submenu`}
+                >
+                  <ChevronDown
+                    className="mobile-nav-chevron h-5 w-5 shrink-0 transition-transform duration-200"
+                    aria-hidden="true"
+                  />
+                </button>
+              </div>
+
+              <div
+                id={`mobile-submenu-${item.key}`}
+                class="mobile-submenu hidden pb-3"
+              >
+                <div class="ml-4 border-l-2 border-blue-100 pl-3">
+                  {item.children.map((child) => (
+                    <a
+                      href={child.link}
+                      class="block rounded-lg px-4 py-3 text-base text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                    >
+                      {child.text}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <a
+              href={item.link}
+              class="flex w-full items-center rounded-xl border-b border-gray-100 px-4 py-4 text-lg font-medium text-gray-800 transition-all hover:bg-gray-50 hover:text-blue-600"
+              data-i18n-key={`nav.${item.key}`}
+            >
+              <span>{item.text}</span>
+            </a>
+          )
+        )
       }
 
       {
         customPages?.map((item) => (
           <a
             href={item.link}
-            class="flex w-full items-center rounded-xl border-b border-gray-100 px-4 py-4 text-lg font-medium text-gray-800 transition-all hover:bg-gray-50 hover:text-blue-600 last:border-0"
+            class="flex w-full items-center rounded-xl border-b border-gray-100 px-4 py-4 text-lg font-medium text-gray-800 transition-all hover:bg-gray-50 hover:text-blue-600"
             data-i18n-key={item.key}
-            onclick="window.closeMobileMenu()"
           >
             <span>{item.text}</span>
           </a>
@@ -285,40 +356,62 @@ const getIcon = (key: string) => iconMap[key] || Sparkles;
     </nav>
 
     <!-- Mobile menu footer -->
-    <div
-      class="shrink-0 border-t border-gray-200 bg-gray-50 p-8"
-    >
-      <p
-        class="text-center text-sm font-medium text-gray-500"
-      >
+    <div class="shrink-0 border-t border-gray-200 bg-gray-50 p-8">
+      <p class="text-center text-sm font-medium text-gray-500">
         © {new Date().getFullYear()} {SITE.labName}
       </p>
     </div>
   </div>
 </header>
 
+<style>
+  .mobile-nav-group.is-open .mobile-nav-chevron {
+    transform: rotate(180deg);
+  }
+</style>
+
 <script is:inline>
   (function () {
+    const header = document.getElementById('site-header');
     const btn = document.getElementById('mobile-menu-btn');
     const menu = document.getElementById('mobile-menu');
     const iconMenu = document.querySelector('.icon-menu');
     const iconClose = document.querySelector('.icon-close');
-    const langLabel = document.getElementById(
-      'current-lang-label'
-    );
+    const langLabel = document.getElementById('current-lang-label');
 
     let lastFocusedEl = null;
 
     function setAria(open) {
-      btn?.setAttribute(
-        'aria-expanded',
-        open ? 'true' : 'false'
-      );
+      btn?.setAttribute('aria-expanded', open ? 'true' : 'false');
+      menu?.setAttribute('aria-hidden', open ? 'false' : 'true');
+    }
 
-      menu?.setAttribute(
-        'aria-hidden',
-        open ? 'false' : 'true'
-      );
+    function closeMobileSubmenu(group) {
+      const toggle = group.querySelector('.mobile-submenu-toggle');
+      const submenu = group.querySelector('.mobile-submenu');
+
+      group.classList.remove('is-open');
+      toggle?.setAttribute('aria-expanded', 'false');
+      submenu?.classList.add('hidden');
+    }
+
+    function openMobileSubmenu(group) {
+      const toggle = group.querySelector('.mobile-submenu-toggle');
+      const submenu = group.querySelector('.mobile-submenu');
+
+      group.classList.add('is-open');
+      toggle?.setAttribute('aria-expanded', 'true');
+      submenu?.classList.remove('hidden');
+    }
+
+    function closeMobileSubmenus(exceptGroup = null) {
+      menu
+        ?.querySelectorAll('[data-mobile-nav-group]')
+        .forEach((group) => {
+          if (group !== exceptGroup) {
+            closeMobileSubmenu(group);
+          }
+        });
     }
 
     function trapFocus(event) {
@@ -341,16 +434,10 @@ const getIcon = (key: string) => iconMap[key] || Sparkles;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
 
-      if (
-        event.shiftKey &&
-        document.activeElement === first
-      ) {
+      if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last.focus();
-      } else if (
-        !event.shiftKey &&
-        document.activeElement === last
-      ) {
+      } else if (!event.shiftKey && document.activeElement === last) {
         event.preventDefault();
         first.focus();
       }
@@ -370,50 +457,33 @@ const getIcon = (key: string) => iconMap[key] || Sparkles;
         menu.offsetHeight;
         menu.classList.remove('hidden');
 
-        menu.animate(
-          [
-            { opacity: 0 },
-            { opacity: 1 },
-          ],
-          {
-            duration: 200,
-            fill: 'forwards',
-            easing: 'ease-out',
-          }
-        );
+        menu.animate([{ opacity: 0 }, { opacity: 1 }], {
+          duration: 200,
+          fill: 'forwards',
+          easing: 'ease-out',
+        });
       }
 
-      iconMenu?.classList.add(
-        'rotate-90',
-        'opacity-0'
-      );
-
-      iconClose?.classList.remove(
-        'hidden',
-        'rotate-90'
-      );
+      iconMenu?.classList.add('rotate-90', 'opacity-0');
+      iconClose?.classList.remove('hidden', 'rotate-90');
 
       document.body.classList.add('overflow-hidden');
       setAria(true);
 
       lastFocusedEl = document.activeElement;
 
-      const firstLink = menu?.querySelector('a');
-      firstLink?.focus?.();
-
-      document.addEventListener(
-        'keydown',
-        onKeydown
+      const firstFocusable = menu?.querySelector(
+        'a, button'
       );
+      firstFocusable?.focus?.();
+
+      document.addEventListener('keydown', onKeydown);
     }
 
     window.closeMobileMenu = function () {
       if (menu) {
         const animation = menu.animate(
-          [
-            { opacity: 1 },
-            { opacity: 0 },
-          ],
+          [{ opacity: 1 }, { opacity: 0 }],
           {
             duration: 200,
             fill: 'forwards',
@@ -424,30 +494,21 @@ const getIcon = (key: string) => iconMap[key] || Sparkles;
         animation.onfinish = () => {
           menu.style.display = 'none';
           menu.classList.add('hidden');
+          closeMobileSubmenus();
         };
       }
 
-      iconMenu?.classList.remove(
-        'rotate-90',
-        'opacity-0'
-      );
-
+      iconMenu?.classList.remove('rotate-90', 'opacity-0');
       iconClose?.classList.add('rotate-90');
 
       setTimeout(() => {
         iconClose?.classList.add('hidden');
       }, 200);
 
-      document.body.classList.remove(
-        'overflow-hidden'
-      );
-
+      document.body.classList.remove('overflow-hidden');
       setAria(false);
 
-      document.removeEventListener(
-        'keydown',
-        onKeydown
-      );
+      document.removeEventListener('keydown', onKeydown);
 
       if (
         lastFocusedEl &&
@@ -477,68 +538,86 @@ const getIcon = (key: string) => iconMap[key] || Sparkles;
       }
     };
 
+    /*
+     * 모바일에서는 메뉴 이름은 해당 페이지로 이동하고,
+     * 오른쪽 화살표 버튼만 하위 메뉴를 펼치거나 접습니다.
+     * 하나의 하위 메뉴를 열면 나머지는 자동으로 닫습니다.
+     */
     menu
-      ?.querySelectorAll('a')
-      .forEach((link) => {
-        link.addEventListener(
-          'click',
-          window.closeMobileMenu
-        );
+      ?.querySelectorAll('[data-mobile-nav-group]')
+      .forEach((group) => {
+        const toggle = group.querySelector('.mobile-submenu-toggle');
+
+        toggle?.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+
+          const isOpen = group.classList.contains('is-open');
+
+          if (isOpen) {
+            closeMobileSubmenu(group);
+          } else {
+            closeMobileSubmenus(group);
+            openMobileSubmenu(group);
+          }
+        });
       });
+
+    /*
+     * 실제 페이지 또는 앵커 링크를 선택했을 때 모바일 메뉴를 닫습니다.
+     */
+    menu?.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', window.closeMobileMenu);
+    });
 
     function updateHeaderLang(lang) {
       if (langLabel) {
-        langLabel.textContent =
-          lang.toUpperCase();
+        langLabel.textContent = lang.toUpperCase();
       }
 
-      document
-        .querySelectorAll('.lang-option')
-        .forEach((button) => {
-          const buttonLang =
-            button.getAttribute('data-lang');
+      document.querySelectorAll('.lang-option').forEach((button) => {
+        const buttonLang = button.getAttribute('data-lang');
 
-          if (buttonLang === lang) {
-            button.classList.add(
-              'text-blue-600',
-              'bg-blue-50',
-              'border-blue-200'
-            );
-          } else {
-            button.classList.remove(
-              'text-blue-600',
-              'bg-blue-50',
-              'border-blue-200'
-            );
-          }
-        });
+        if (buttonLang === lang) {
+          button.classList.add(
+            'active',
+            'text-blue-600',
+            'bg-blue-50',
+            'border-blue-200'
+          );
+        } else {
+          button.classList.remove(
+            'active',
+            'text-blue-600',
+            'bg-blue-50',
+            'border-blue-200'
+          );
+        }
+      });
     }
 
-    window.addEventListener(
-      'language-change',
-      (event) => {
-        updateHeaderLang(event.detail.lang);
-      }
-    );
+    window.addEventListener('language-change', (event) => {
+      updateHeaderLang(event.detail.lang);
+    });
 
     try {
       const saved =
         localStorage.getItem('preferred-lang') ||
-        defaultLang;
+        header?.dataset.defaultLang ||
+        'en';
 
       updateHeaderLang(saved);
-    } catch {}
+    } catch {
+      updateHeaderLang(header?.dataset.defaultLang || 'en');
+    }
 
     document
-      .querySelectorAll(
-        '.lang-option:not(.mobile-lang-option)'
-      )
+      .querySelectorAll('.lang-option:not(.mobile-lang-option)')
       .forEach((button) => {
         button.addEventListener('click', () => {
-          const lang =
-            button.getAttribute('data-lang');
+          const lang = button.getAttribute('data-lang');
 
-          if (window.setLanguage) {
+          if (window.setLanguage && lang) {
             window.setLanguage(lang);
           }
         });

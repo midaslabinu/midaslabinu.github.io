@@ -1,5 +1,17 @@
 import heroImage from './assets/hero-real.jpg';
 
+export type NavChild = {
+  text: string;
+  link: string;
+};
+
+export type NavItem = {
+  text: string;
+  link: string;
+  key: string;
+  children?: NavChild[];
+};
+
 export const SITE = {
   website: 'https://midaslabinu.github.io/',
   author: 'MIDAS Lab',
@@ -28,21 +40,92 @@ export const SITE = {
   },
 
   // Main navigation
+  // Menu order: Home → People → Research → Publications → Software → Contact
   nav: [
-    { text: 'Home', link: '/', key: 'home' },
-    { text: 'Research', link: '/research', key: 'research' },
+    {
+      text: 'Home',
+      link: '/',
+      key: 'home',
+    },
+    {
+      text: 'People',
+      link: '/people',
+      key: 'people',
+      children: [
+        {
+          text: 'Principal Investigator',
+          link: '/people#pi',
+        },
+        {
+          text: 'Graduate Students',
+          link: '/people#graduate',
+        },
+        {
+          text: 'Undergraduate Students',
+          link: '/people#undergraduate',
+        },
+        {
+          text: 'Alumni',
+          link: '/people#alumni',
+        },
+      ],
+    },
+    {
+      text: 'Research',
+      link: '/research',
+      key: 'research',
+      children: [
+        {
+          text: 'Bioinformatics',
+          link: '/research#bioinformatics',
+        },
+        {
+          text: 'Healthcare AI',
+          link: '/research#healthcare-ai',
+        },
+        {
+          text: 'AI for Science & Engineering',
+          link: '/research#ai-for-science-engineering',
+        },
+      ],
+    },
     {
       text: 'Publications',
       link: '/publications',
       key: 'publications',
+      children: [
+        {
+          text: 'Journal Articles',
+          link: '/publications#journal',
+        },
+        {
+          text: 'Conference Papers',
+          link: '/publications#conference',
+        },
+        {
+          text: 'Patents',
+          link: '/publications#patent',
+        },
+        {
+          text: 'Books & Book Chapters',
+          link: '/publications#book',
+        },
+      ],
     },
-    { text: 'People', link: '/people', key: 'people' },
-    { text: 'Software', link: '/software', key: 'software' },
-    { text: 'Contact', link: '/contact', key: 'contact' },
-  ],
+    {
+      text: 'Software',
+      link: '/software',
+      key: 'software',
+    },
+    {
+      text: 'Contact',
+      link: '/contact',
+      key: 'contact',
+    },
+  ] satisfies NavItem[],
 
   // Additional pages can be added later.
-  customPages: [],
+  customPages: [] as NavItem[],
 
   // Initial development uses English only.
   // Korean/English parallel support will be added later.
