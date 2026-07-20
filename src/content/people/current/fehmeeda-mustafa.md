@@ -6,7 +6,7 @@ title:
   - "MIDAS Lab"
 avatar: "../../../assets/female_student.jpg"
 bio: "M.S. student at MIDAS Lab, Incheon National University."
-weight: 3
+weight: 1
 ---
 
 Fehmeeda Mustafa is an M.S. student in MIDAS Lab at Incheon National University.

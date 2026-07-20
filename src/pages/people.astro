@@ -50,7 +50,16 @@ const groupedMembers = groups
           return roleDifference;
         }
 
-        return (a.data.weight ?? 100) - (b.data.weight ?? 100);
+        const weightA = a.data.weight ?? 0;
+        const weightB = b.data.weight ?? 0;
+
+        // Alumni는 최근 멤버가 먼저 나오도록 큰 weight부터 정렬합니다.
+        if (group.id === 'alumni') {
+          return weightB - weightA;
+        }
+
+        // 현재 멤버는 먼저 합류한 멤버가 먼저 나오도록 작은 weight부터 정렬합니다.
+        return weightA - weightB;
       });
 
     return {

@@ -70,7 +70,7 @@ const badgeColors = [
 <div class="group flex flex-col items-center text-center">
   <!-- Avatar container -->
   <div
-    class="relative mb-4 h-48 w-48 overflow-hidden rounded-xl bg-gray-100 transition-shadow group-hover:shadow-lg"
+    class="relative mb-4 aspect-[4/5] w-48 overflow-hidden rounded-xl bg-gray-100 transition-shadow group-hover:shadow-lg"
   >
     <a
       href={memberUrl}
@@ -80,7 +80,7 @@ const badgeColors = [
       <img
         src={avatar.src}
         alt={name}
-        class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+        class="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
         loading="lazy"
       />
     </a>

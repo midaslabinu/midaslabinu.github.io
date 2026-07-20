@@ -6,7 +6,7 @@ title:
   - "MIDAS Lab"
 avatar: "../../../assets/male_student.jpg"
 bio: "M.S. student at Sungkyunkwan University, South Korea."
-weight: 3
+weight: 2
 ---
 
 Dong Hyun Oh is an alumnus of MIDAS Lab at Incheon National University.

@@ -6,7 +6,7 @@ title:
   - "MIDAS Lab"
 avatar: "../../../assets/male_student.jpg"
 bio: "B.S. alumnus of MIDAS Lab, class of 2025."
-weight: 2
+weight: 3
 ---
 
 Jihun Choi is an alumnus of MIDAS Lab at Incheon National University.

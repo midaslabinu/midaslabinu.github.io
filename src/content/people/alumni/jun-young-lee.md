@@ -6,7 +6,7 @@ title:
   - "MIDAS Lab"
 avatar: "../../../assets/male_student.jpg"
 bio: "B.S. alumnus of MIDAS Lab, class of 2026."
-weight: 1
+weight: 4
 ---
 
 Jun Young Lee is an alumnus of MIDAS Lab at Incheon National University.

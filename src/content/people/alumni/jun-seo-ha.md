@@ -6,7 +6,7 @@ title:
   - "MIDAS Lab"
 avatar: "../../../assets/male_student.jpg"
 bio: "M.S. student, Gwangju Institute of Science and Technology (GIST), South Korea"
-weight: 4
+weight: 1
 ---
 
 Jun Seo Ha is an alumnus of MIDAS Lab at Incheon National University.

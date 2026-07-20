@@ -4,17 +4,23 @@ role: "Undergraduate"
 title:
   - "Undergraduate Research Intern"
   - "MIDAS Lab"
-avatar: "../../../assets/male_student.jpg"
-bio: "Undergraduate research intern at MIDAS Lab, Incheon National University."
+avatar: "../../../assets/hyunwoo_bae.jpg"
+bio: "Undergraduate researcher interested in bioinformatics, artificial intelligence, and big data analysis for single-cell data analysis."
 weight: 4
 ---
 
-Hyunwoo Bae is an undergraduate research intern in MIDAS Lab at Incheon National University.
-
 ## Research Interests
 
-- Research interests will be added soon.
+- Bioinformatics
+- Artificial Intelligence
+- Big Data Analysis
 
 ## Education
 
-- Education information will be added soon.
+- **B.S. in Bio-Robot Systems Engineering**, Incheon National University (Expected 2027)
+
+## Short Bio
+
+Hello, I am **Hyunwoo Bae**, an undergraduate student in the Department of Bio-Robot Systems Engineering at Incheon National University and an undergraduate research intern at **MIDAS Lab**.
+
+My research focuses on **single-cell data analysis** using **bioinformatics** and **artificial intelligence**. In particular, I have a strong interest in **data analysis** and aim to develop computational approaches for analyzing biological data through AI-driven methodologies.
