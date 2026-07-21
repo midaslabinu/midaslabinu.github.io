@@ -9,6 +9,8 @@ bio: "Undergraduate researcher interested in bioinformatics, artificial intellig
 weight: 4
 ---
 
+Hyunwoo Bae is an undergraduate student in Bio-Robot Systems Engineering at Incheon National University and an undergraduate research intern at MIDAS Lab. His research focuses on single-cell data analysis using bioinformatics and artificial intelligence. He is particularly interested in data analysis and the development of computational approaches for interpreting large-scale biological data.
+
 ## Research Interests
 
 - Bioinformatics
@@ -19,8 +21,3 @@ weight: 4
 
 - **B.S. in Bio-Robot Systems Engineering**, Incheon National University (Expected 2027)
 
-## Short Bio
-
-Hello, I am **Hyunwoo Bae**, an undergraduate student in the Department of Bio-Robot Systems Engineering at Incheon National University and an undergraduate research intern at **MIDAS Lab**.
-
-My research focuses on **single-cell data analysis** using **bioinformatics** and **artificial intelligence**. In particular, I have a strong interest in **data analysis** and aim to develop computational approaches for analyzing biological data through AI-driven methodologies.
