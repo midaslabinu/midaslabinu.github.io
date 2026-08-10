@@ -18,6 +18,136 @@ const softwares = await getCollection(
 
 type SoftwareEntry = (typeof softwares)[number];
 
+/* =========================================================
+   Multilingual helpers
+   ========================================================= */
+
+type LocalizedText =
+  | string
+  | {
+      ko: string;
+      en: string;
+    };
+
+type LocalizedStringArray =
+  | string[]
+  | {
+      ko: string[];
+      en: string[];
+    };
+
+function getLocalizedText(
+  value?: LocalizedText
+) {
+  if (!value) {
+    return {
+      ko: '',
+      en: '',
+    };
+  }
+
+  if (typeof value === 'string') {
+    return {
+      ko: value,
+      en: value,
+    };
+  }
+
+  return {
+    ko: value.ko,
+    en: value.en,
+  };
+}
+
+function getLocalizedArray(
+  value?: LocalizedStringArray
+) {
+  if (!value) {
+    return {
+      ko: [],
+      en: [],
+    };
+  }
+
+  if (Array.isArray(value)) {
+    return {
+      ko: value,
+      en: value,
+    };
+  }
+
+  return {
+    ko: value.ko,
+    en: value.en,
+  };
+}
+
+/* =========================================================
+   Software type / status translations
+   ========================================================= */
+
+const typeLabels: Record<
+  string,
+  {
+    ko: string;
+    en: string;
+  }
+> = {
+  'Research Code': {
+    ko: '연구 코드',
+    en: 'Research Code',
+  },
+  'Web Application': {
+    ko: '웹 애플리케이션',
+    en: 'Web Application',
+  },
+  'Software Package': {
+    ko: '소프트웨어 패키지',
+    en: 'Software Package',
+  },
+  Pipeline: {
+    ko: '분석 파이프라인',
+    en: 'Pipeline',
+  },
+  'Benchmark / Resource': {
+    ko: '벤치마크 / 연구 리소스',
+    en: 'Benchmark / Resource',
+  },
+};
+
+const statusLabels: Record<
+  string,
+  {
+    ko: string;
+    en: string;
+  }
+> = {
+  Active: {
+    ko: '활성',
+    en: 'Active',
+  },
+  Maintained: {
+    ko: '유지보수 중',
+    en: 'Maintained',
+  },
+  Archived: {
+    ko: '보관',
+    en: 'Archived',
+  },
+  Legacy: {
+    ko: '레거시',
+    en: 'Legacy',
+  },
+  'Under Development': {
+    ko: '개발 중',
+    en: 'Under Development',
+  },
+};
+
+/* =========================================================
+   Sorting
+   ========================================================= */
+
 /**
  * 소프트웨어의 대표 연도입니다.
  *
@@ -25,21 +155,46 @@ type SoftwareEntry = (typeof softwares)[number];
  * 2. paper.year
  * 3. 연도 정보가 없으면 0
  */
-function getSoftwareYear(software: SoftwareEntry): number {
-  return software.data.year ?? software.data.paper?.year ?? 0;
+function getSoftwareYear(
+  software: SoftwareEntry
+): number {
+  return (
+    software.data.year ??
+    software.data.paper?.year ??
+    0
+  );
 }
 
 /**
- * Featured Software는 MD 파일의 order 값을 기준으로 정렬합니다.
+ * 정렬용 영문 제목을 반환합니다.
+ */
+function getSoftwareTitle(
+  software: SoftwareEntry
+): string {
+  const localizedTitle =
+    getLocalizedText(software.data.title);
+
+  return localizedTitle.en;
+}
+
+/**
+ * Featured Software는 MD 파일의 order 값을
+ * 기준으로 정렬합니다.
  */
 const featuredSoftware = softwares
-  .filter((software) => software.data.featured)
+  .filter(
+    (software) => software.data.featured
+  )
   .sort((a, b) => {
     if (a.data.order !== b.data.order) {
-      return a.data.order - b.data.order;
+      return (
+        a.data.order - b.data.order
+      );
     }
 
-    return a.data.title.localeCompare(b.data.title);
+    return getSoftwareTitle(a).localeCompare(
+      getSoftwareTitle(b)
+    );
   });
 
 /**
@@ -50,25 +205,37 @@ const featuredSoftware = softwares
  * 2. order
  * 3. 제목
  */
-const allSoftware = [...softwares].sort((a, b) => {
-  const yearA = getSoftwareYear(a);
-  const yearB = getSoftwareYear(b);
+const allSoftware = [...softwares].sort(
+  (a, b) => {
+    const yearA = getSoftwareYear(a);
+    const yearB = getSoftwareYear(b);
 
-  if (yearA !== yearB) {
-    return yearB - yearA;
+    if (yearA !== yearB) {
+      return yearB - yearA;
+    }
+
+    if (a.data.order !== b.data.order) {
+      return (
+        a.data.order - b.data.order
+      );
+    }
+
+    return getSoftwareTitle(a).localeCompare(
+      getSoftwareTitle(b)
+    );
   }
+);
 
-  if (a.data.order !== b.data.order) {
-    return a.data.order - b.data.order;
-  }
-
-  return a.data.title.localeCompare(b.data.title);
-});
+/* =========================================================
+   Links
+   ========================================================= */
 
 /**
  * 웹 애플리케이션 또는 데모 링크입니다.
  */
-function getApplicationLink(software: SoftwareEntry) {
+function getApplicationLink(
+  software: SoftwareEntry
+) {
   return (
     software.data.links?.website ??
     software.data.links?.demo
@@ -78,7 +245,9 @@ function getApplicationLink(software: SoftwareEntry) {
 /**
  * 소프트웨어 제목에 연결할 대표 링크입니다.
  */
-function getPrimaryLink(software: SoftwareEntry) {
+function getPrimaryLink(
+  software: SoftwareEntry
+) {
   return (
     getApplicationLink(software) ??
     software.data.links?.github ??
@@ -92,20 +261,34 @@ function getPrimaryLink(software: SoftwareEntry) {
     id="software-page-top"
     class="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-20"
   >
+    <!-- =====================================================
+         Page Header
+         ===================================================== -->
+
     <header class="mb-14 max-w-3xl">
       <h1
         class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl"
+        data-ko="소프트웨어"
+        data-en="Software"
       >
         Software
       </h1>
 
-      <p class="mt-4 text-lg leading-8 text-gray-600">
+      <p
+        class="mt-4 text-lg leading-8 text-gray-600"
+        data-ko="MIDAS Lab에서 개발한 연구용 소프트웨어와 계산 도구를 소개합니다."
+        data-en="Research software and computational tools developed by MIDAS Lab."
+      >
         Research software and computational tools developed by MIDAS Lab.
       </p>
     </header>
 
     {
       softwares.length === 0 ? (
+        <!-- =================================================
+             Empty State
+             ================================================= -->
+
         <section
           class="flex min-h-[360px] items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 py-16 text-center"
         >
@@ -116,23 +299,47 @@ function getPrimaryLink(software: SoftwareEntry) {
               <Code2 className="h-7 w-7" />
             </div>
 
-            <h2 class="mt-6 text-2xl font-bold text-gray-900">
+            <h2
+              class="mt-6 text-2xl font-bold text-gray-900"
+              data-ko="등록된 소프트웨어가 없습니다"
+              data-en="No Software Entries Found"
+            >
               No Software Entries Found
             </h2>
 
             <p class="mt-4 leading-7 text-gray-600">
-              Add published software entries to
+              <span
+                data-ko="공개할 소프트웨어 항목을"
+                data-en="Add published software entries to"
+              >
+                Add published software entries to
+              </span>
+
+              {' '}
+
               <code
                 class="mx-1 rounded bg-gray-100 px-2 py-1 text-sm"
               >
                 src/content/softwares/
               </code>
-              to display them here.
+
+              {' '}
+
+              <span
+                data-ko="경로에 추가하면 이 페이지에 표시됩니다."
+                data-en="to display them here."
+              >
+                to display them here.
+              </span>
             </p>
           </div>
         </section>
       ) : (
         <>
+          <!-- =================================================
+               Featured Software
+               ================================================= -->
+
           {
             featuredSoftware.length > 0 && (
               <section
@@ -142,6 +349,8 @@ function getPrimaryLink(software: SoftwareEntry) {
                 <div class="mb-8">
                   <p
                     class="text-sm font-semibold uppercase tracking-[0.18em] text-blue-600"
+                    data-ko="주요 프로젝트"
+                    data-en="Selected projects"
                   >
                     Selected projects
                   </p>
@@ -149,166 +358,322 @@ function getPrimaryLink(software: SoftwareEntry) {
                   <h2
                     id="featured-software-heading"
                     class="mt-2 text-3xl font-bold tracking-tight text-gray-900"
+                    data-ko="주요 소프트웨어"
+                    data-en="Featured Software"
                   >
                     Featured Software
                   </h2>
 
-                  <p class="mt-3 max-w-3xl text-gray-600">
+                  <p
+                    class="mt-3 max-w-3xl text-gray-600"
+                    data-ko="MIDAS Lab에서 개발한 주요 소프트웨어와 계산 연구 리소스를 소개합니다."
+                    data-en="Selected software and computational resources developed by MIDAS Lab."
+                  >
                     Selected software and computational resources
                     developed by MIDAS Lab.
                   </p>
                 </div>
 
-                <div class="grid gap-6 lg:grid-cols-3">
+                <div
+                  class="grid gap-6 lg:grid-cols-3"
+                >
                   {
-                    featuredSoftware.map((software) => {
-                      const primaryLink =
-                        getPrimaryLink(software);
+                    featuredSoftware.map(
+                      (software) => {
+                        const primaryLink =
+                          getPrimaryLink(
+                            software
+                          );
 
-                      const applicationLink =
-                        getApplicationLink(software);
+                        const applicationLink =
+                          getApplicationLink(
+                            software
+                          );
 
-                      return (
-                        <article
-                          class="flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-md"
-                        >
-                          <div>
-                            <p
-                              class="text-sm font-semibold text-blue-600"
-                            >
-                              {software.data.type}
-                            </p>
+                        const localizedTitle =
+                          getLocalizedText(
+                            software.data.title
+                          );
 
-                            <h3
-                              class="mt-2 text-2xl font-bold tracking-tight text-gray-900"
-                            >
-                              {
-                                primaryLink ? (
-                                  <a
-                                    href={primaryLink}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    class="transition hover:text-blue-600"
-                                  >
-                                    {software.data.title}
-                                  </a>
-                                ) : (
-                                  software.data.title
-                                )
-                              }
-                            </h3>
-                          </div>
+                        const localizedDescription =
+                          getLocalizedText(
+                            software.data
+                              .description
+                          );
 
-                          <p
-                            class="mt-4 flex-1 leading-7 text-gray-600"
+                        const typeLabel =
+                          typeLabels[
+                            software.data.type
+                          ] ?? {
+                            ko: software.data.type,
+                            en: software.data.type,
+                          };
+
+                        const localizedPaperTitle =
+                          software.data.paper
+                            ? getLocalizedText(
+                                software.data.paper
+                                  .title
+                              )
+                            : null;
+
+                        const localizedPaperVenue =
+                          software.data.paper
+                            ? getLocalizedText(
+                                software.data.paper
+                                  .venue
+                              )
+                            : null;
+
+                        return (
+                          <article
+                            class="flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-md"
                           >
-                            {software.data.description}
-                          </p>
+                            <div>
+                              <p
+                                class="text-sm font-semibold text-blue-600"
+                                data-ko={
+                                  typeLabel.ko
+                                }
+                                data-en={
+                                  typeLabel.en
+                                }
+                              >
+                                {typeLabel.en}
+                              </p>
 
-                          {
-                            software.data.languages &&
-                            software.data.languages.length > 0 && (
-                              <div class="mt-5 flex flex-wrap gap-2">
+                              <h3
+                                class="mt-2 text-2xl font-bold tracking-tight text-gray-900"
+                              >
                                 {
-                                  software.data.languages.map(
-                                    (language) => (
+                                  primaryLink ? (
+                                    <a
+                                      href={
+                                        primaryLink
+                                      }
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      class="transition hover:text-blue-600"
+                                    >
                                       <span
-                                        class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600"
+                                        data-ko={
+                                          localizedTitle.ko
+                                        }
+                                        data-en={
+                                          localizedTitle.en
+                                        }
                                       >
-                                        {language}
+                                        {
+                                          localizedTitle.en
+                                        }
                                       </span>
-                                    )
+                                    </a>
+                                  ) : (
+                                    <span
+                                      data-ko={
+                                        localizedTitle.ko
+                                      }
+                                      data-en={
+                                        localizedTitle.en
+                                      }
+                                    >
+                                      {
+                                        localizedTitle.en
+                                      }
+                                    </span>
                                   )
                                 }
-                              </div>
-                            )
-                          }
+                              </h3>
+                            </div>
 
-                          {
-                            software.data.paper && (
-                              <div
-                                class="mt-6 rounded-xl bg-gray-50 p-4"
-                              >
-                                <p
-                                  class="text-sm font-semibold leading-6 text-gray-800"
-                                >
-                                  {software.data.paper.title}
-                                </p>
+                            <p
+                              class="mt-4 flex-1 leading-7 text-gray-600"
+                              data-ko={
+                                localizedDescription.ko
+                              }
+                              data-en={
+                                localizedDescription.en
+                              }
+                            >
+                              {
+                                localizedDescription.en
+                              }
+                            </p>
 
-                                <p
-                                  class="mt-1 text-sm text-gray-500"
-                                >
-                                  {software.data.paper.venue},{' '}
-                                  {software.data.paper.year}
-                                </p>
-                              </div>
-                            )
-                          }
-
-                          <div
-                            class="mt-6 flex flex-wrap gap-3"
-                          >
                             {
-                              software.data.links?.github && (
-                                <a
-                                  href={
-                                    software.data.links.github
+                              software.data
+                                .languages &&
+                              software.data
+                                .languages.length >
+                                0 && (
+                                <div
+                                  class="mt-5 flex flex-wrap gap-2"
+                                >
+                                  {
+                                    software.data.languages.map(
+                                      (
+                                        language
+                                      ) => (
+                                        <span
+                                          class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600"
+                                        >
+                                          {
+                                            language
+                                          }
+                                        </span>
+                                      )
+                                    )
                                   }
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
-                                >
-                                  <Github className="h-4 w-4" />
-                                  GitHub
-                                </a>
+                                </div>
                               )
                             }
 
                             {
-                              applicationLink && (
-                                <a
-                                  href={applicationLink}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-blue-300 hover:text-blue-600"
+                              software.data
+                                .paper &&
+                              localizedPaperTitle &&
+                              localizedPaperVenue && (
+                                <div
+                                  class="mt-6 rounded-xl bg-gray-50 p-4"
                                 >
-                                  <ExternalLink
-                                    className="h-4 w-4"
-                                  />
-                                  Launch App
-                                </a>
+                                  <p
+                                    class="text-sm font-semibold leading-6 text-gray-800"
+                                    data-ko={
+                                      localizedPaperTitle.ko
+                                    }
+                                    data-en={
+                                      localizedPaperTitle.en
+                                    }
+                                  >
+                                    {
+                                      localizedPaperTitle.en
+                                    }
+                                  </p>
+
+                                  <p
+                                    class="mt-1 text-sm text-gray-500"
+                                  >
+                                    <span
+                                      data-ko={
+                                        localizedPaperVenue.ko
+                                      }
+                                      data-en={
+                                        localizedPaperVenue.en
+                                      }
+                                    >
+                                      {
+                                        localizedPaperVenue.en
+                                      }
+                                    </span>
+                                    ,{' '}
+                                    {
+                                      software
+                                        .data
+                                        .paper
+                                        .year
+                                    }
+                                  </p>
+                                </div>
                               )
                             }
 
-                            {
-                              software.data.paper && (
-                                <a
-                                  href={software.data.paper.url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-blue-300 hover:text-blue-600"
-                                >
-                                  <FileText
-                                    className="h-4 w-4"
-                                  />
-                                  Paper
-                                </a>
-                              )
-                            }
-                          </div>
-                        </article>
-                      );
-                    })
+                            <div
+                              class="mt-6 flex flex-wrap gap-3"
+                            >
+                              {
+                                software.data
+                                  .links
+                                  ?.github && (
+                                  <a
+                                    href={
+                                      software
+                                        .data
+                                        .links
+                                        .github
+                                    }
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
+                                  >
+                                    <Github className="h-4 w-4" />
+                                    GitHub
+                                  </a>
+                                )
+                              }
+
+                              {
+                                applicationLink && (
+                                  <a
+                                    href={
+                                      applicationLink
+                                    }
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-blue-300 hover:text-blue-600"
+                                  >
+                                    <ExternalLink
+                                      className="h-4 w-4"
+                                    />
+
+                                    <span
+                                      data-ko="실행"
+                                      data-en="Launch App"
+                                    >
+                                      Launch App
+                                    </span>
+                                  </a>
+                                )
+                              }
+
+                              {
+                                software.data
+                                  .paper && (
+                                  <a
+                                    href={
+                                      software
+                                        .data
+                                        .paper.url
+                                    }
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-blue-300 hover:text-blue-600"
+                                  >
+                                    <FileText
+                                      className="h-4 w-4"
+                                    />
+
+                                    <span
+                                      data-ko="논문"
+                                      data-en="Paper"
+                                    >
+                                      Paper
+                                    </span>
+                                  </a>
+                                )
+                              }
+                            </div>
+                          </article>
+                        );
+                      }
+                    )
                   }
                 </div>
               </section>
             )
           }
 
-          <section aria-labelledby="all-software-heading">
+          <!-- =================================================
+               All Software
+               ================================================= -->
+
+          <section
+            aria-labelledby="all-software-heading"
+          >
             <div class="mb-8">
               <p
                 class="text-sm font-semibold uppercase tracking-[0.18em] text-blue-600"
+                data-ko="연구 성과"
+                data-en="Research outputs"
               >
                 Research outputs
               </p>
@@ -319,6 +684,8 @@ function getPrimaryLink(software: SoftwareEntry) {
                 <h2
                   id="all-software-heading"
                   class="text-3xl font-bold tracking-tight text-gray-900"
+                  data-ko="전체 소프트웨어"
+                  data-en="All Software"
                 >
                   All Software
                 </h2>
@@ -327,15 +694,31 @@ function getPrimaryLink(software: SoftwareEntry) {
                   class="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600"
                 >
                   {allSoftware.length}{' '}
-                  {
-                    allSoftware.length === 1
-                      ? 'project'
-                      : 'projects'
-                  }
+
+                  <span
+                    data-ko="개 프로젝트"
+                    data-en={
+                      allSoftware.length ===
+                      1
+                        ? 'project'
+                        : 'projects'
+                    }
+                  >
+                    {
+                      allSoftware.length ===
+                      1
+                        ? 'project'
+                        : 'projects'
+                    }
+                  </span>
                 </span>
               </div>
 
-              <p class="mt-3 max-w-3xl text-gray-600">
+              <p
+                class="mt-3 max-w-3xl text-gray-600"
+                data-ko="연구용 소프트웨어, 소스 코드, 웹 애플리케이션, 분석 파이프라인 및 계산 연구 리소스를 확인할 수 있습니다."
+                data-en="Browse software, source code, web applications, pipelines, and computational resources."
+              >
                 Browse software, source code, web applications,
                 pipelines, and computational resources.
               </p>
@@ -346,214 +729,398 @@ function getPrimaryLink(software: SoftwareEntry) {
               class="grid gap-7"
             >
               {
-                allSoftware.map((software) => {
-                  const primaryLink =
-                    getPrimaryLink(software);
+                allSoftware.map(
+                  (software) => {
+                    const primaryLink =
+                      getPrimaryLink(
+                        software
+                      );
 
-                  const applicationLink =
-                    getApplicationLink(software);
+                    const applicationLink =
+                      getApplicationLink(
+                        software
+                      );
 
-                  return (
-                    <article
-                      class="flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                    >
-                      <div
-                        class="flex items-start justify-between gap-4"
+                    const localizedTitle =
+                      getLocalizedText(
+                        software.data.title
+                      );
+
+                    const localizedDescription =
+                      getLocalizedText(
+                        software.data.description
+                      );
+
+                    const localizedDevelopers =
+                      getLocalizedArray(
+                        software.data.developers
+                      );
+
+                    const typeLabel =
+                      typeLabels[
+                        software.data.type
+                      ] ?? {
+                        ko: software.data.type,
+                        en: software.data.type,
+                      };
+
+                    const statusLabel =
+                      statusLabels[
+                        software.data.status
+                      ] ?? {
+                        ko: software.data.status,
+                        en: software.data.status,
+                      };
+
+                    const localizedPaperTitle =
+                      software.data.paper
+                        ? getLocalizedText(
+                            software.data.paper
+                              .title
+                          )
+                        : null;
+
+                    const localizedPaperVenue =
+                      software.data.paper
+                        ? getLocalizedText(
+                            software.data.paper
+                              .venue
+                          )
+                        : null;
+
+                    return (
+                      <article
+                        class="flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md"
                       >
-                        <div class="min-w-0">
-                          <p
-                            class="text-sm font-semibold text-blue-600"
-                          >
-                            {software.data.type}
-                          </p>
-
-                          <h3
-                            class="mt-2 text-xl font-bold text-gray-900 sm:text-2xl"
-                          >
-                            {
-                              primaryLink ? (
-                                <a
-                                  href={primaryLink}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  class="transition hover:text-blue-600"
-                                >
-                                  {software.data.title}
-                                </a>
-                              ) : (
-                                software.data.title
-                              )
-                            }
-                          </h3>
-                        </div>
-
-                        <span
-                          class="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600"
+                        <div
+                          class="flex items-start justify-between gap-4"
                         >
-                          {software.data.status}
-                        </span>
-                      </div>
-
-                      <p
-                        class="mt-4 flex-1 leading-7 text-gray-600"
-                      >
-                        {software.data.description}
-                      </p>
-
-                      {
-                        software.data.developers &&
-                        software.data.developers.length > 0 && (
-                          <p
-                            class="mt-4 text-sm leading-6 text-gray-500"
-                          >
-                            <span
-                              class="font-semibold text-gray-700"
+                          <div class="min-w-0">
+                            <p
+                              class="text-sm font-semibold text-blue-600"
+                              data-ko={
+                                typeLabel.ko
+                              }
+                              data-en={
+                                typeLabel.en
+                              }
                             >
-                              Developers:
-                            </span>{' '}
-                            {
-                              software.data.developers.join(
-                                ', '
-                              )
-                            }
-                          </p>
-                        )
-                      }
+                              {typeLabel.en}
+                            </p>
 
-                      {
-                        software.data.languages &&
-                        software.data.languages.length > 0 && (
-                          <div
-                            class="mt-4 flex flex-wrap gap-2"
-                          >
-                            {
-                              software.data.languages.map(
-                                (language) => (
-                                  <span
-                                    class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600"
+                            <h3
+                              class="mt-2 text-xl font-bold text-gray-900 sm:text-2xl"
+                            >
+                              {
+                                primaryLink ? (
+                                  <a
+                                    href={
+                                      primaryLink
+                                    }
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    class="transition hover:text-blue-600"
                                   >
-                                    {language}
+                                    <span
+                                      data-ko={
+                                        localizedTitle.ko
+                                      }
+                                      data-en={
+                                        localizedTitle.en
+                                      }
+                                    >
+                                      {
+                                        localizedTitle.en
+                                      }
+                                    </span>
+                                  </a>
+                                ) : (
+                                  <span
+                                    data-ko={
+                                      localizedTitle.ko
+                                    }
+                                    data-en={
+                                      localizedTitle.en
+                                    }
+                                  >
+                                    {
+                                      localizedTitle.en
+                                    }
                                   </span>
                                 )
-                              )
+                              }
+                            </h3>
+                          </div>
+
+                          <span
+                            class="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600"
+                            data-ko={
+                              statusLabel.ko
                             }
-                          </div>
-                        )
-                      }
-
-                      {
-                        software.data.paper && (
-                          <div
-                            class="mt-6 rounded-xl bg-gray-50 p-4"
+                            data-en={
+                              statusLabel.en
+                            }
                           >
+                            {statusLabel.en}
+                          </span>
+                        </div>
+
+                        <p
+                          class="mt-4 flex-1 leading-7 text-gray-600"
+                          data-ko={
+                            localizedDescription.ko
+                          }
+                          data-en={
+                            localizedDescription.en
+                          }
+                        >
+                          {
+                            localizedDescription.en
+                          }
+                        </p>
+
+                        {
+                          software.data
+                            .developers &&
+                          localizedDevelopers.en
+                            .length > 0 && (
                             <p
-                              class="text-sm font-semibold leading-6 text-gray-800 sm:text-base"
+                              class="mt-4 text-sm leading-6 text-gray-500"
                             >
-                              {software.data.paper.title}
+                              <span
+                                class="font-semibold text-gray-700"
+                                data-ko="개발자:"
+                                data-en="Developers:"
+                              >
+                                Developers:
+                              </span>
+
+                              {' '}
+
+                              <span
+                                data-ko={
+                                  localizedDevelopers.ko.join(
+                                    ', '
+                                  )
+                                }
+                                data-en={
+                                  localizedDevelopers.en.join(
+                                    ', '
+                                  )
+                                }
+                              >
+                                {
+                                  localizedDevelopers.en.join(
+                                    ', '
+                                  )
+                                }
+                              </span>
                             </p>
+                          )
+                        }
 
-                            <p
-                              class="mt-1 text-sm text-gray-500"
-                            >
-                              {software.data.paper.venue},{' '}
-                              {software.data.paper.year}
-                            </p>
-                          </div>
-                        )
-                      }
-
-                      <div
-                        class="mt-6 flex flex-wrap gap-3"
-                      >
                         {
-                          software.data.links?.github && (
-                            <a
-                              href={
-                                software.data.links.github
+                          software.data
+                            .languages &&
+                          software.data
+                            .languages.length >
+                            0 && (
+                            <div
+                              class="mt-4 flex flex-wrap gap-2"
+                            >
+                              {
+                                software.data.languages.map(
+                                  (
+                                    language
+                                  ) => (
+                                    <span
+                                      class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600"
+                                    >
+                                      {
+                                        language
+                                      }
+                                    </span>
+                                  )
+                                )
                               }
-                              target="_blank"
-                              rel="noreferrer"
-                              class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
-                            >
-                              <Github className="h-4 w-4" />
-                              GitHub
-                            </a>
+                            </div>
                           )
                         }
 
                         {
-                          applicationLink && (
-                            <a
-                              href={applicationLink}
-                              target="_blank"
-                              rel="noreferrer"
-                              class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-blue-300 hover:text-blue-600"
+                          software.data.paper &&
+                          localizedPaperTitle &&
+                          localizedPaperVenue && (
+                            <div
+                              class="mt-6 rounded-xl bg-gray-50 p-4"
                             >
-                              <ExternalLink
-                                className="h-4 w-4"
-                              />
-                              Launch App
-                            </a>
+                              <p
+                                class="text-sm font-semibold leading-6 text-gray-800 sm:text-base"
+                                data-ko={
+                                  localizedPaperTitle.ko
+                                }
+                                data-en={
+                                  localizedPaperTitle.en
+                                }
+                              >
+                                {
+                                  localizedPaperTitle.en
+                                }
+                              </p>
+
+                              <p
+                                class="mt-1 text-sm text-gray-500"
+                              >
+                                <span
+                                  data-ko={
+                                    localizedPaperVenue.ko
+                                  }
+                                  data-en={
+                                    localizedPaperVenue.en
+                                  }
+                                >
+                                  {
+                                    localizedPaperVenue.en
+                                  }
+                                </span>
+                                ,{' '}
+                                {
+                                  software
+                                    .data
+                                    .paper.year
+                                }
+                              </p>
+                            </div>
                           )
                         }
 
-                        {
-                          software.data.links
-                            ?.documentation && (
-                            <a
-                              href={
-                                software.data.links
-                                  .documentation
-                              }
-                              target="_blank"
-                              rel="noreferrer"
-                              class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-blue-300 hover:text-blue-600"
-                            >
-                              <BookOpen
-                                className="h-4 w-4"
-                              />
-                              Docs
-                            </a>
-                          )
-                        }
+                        <div
+                          class="mt-6 flex flex-wrap gap-3"
+                        >
+                          {
+                            software.data.links
+                              ?.github && (
+                              <a
+                                href={
+                                  software.data
+                                    .links.github
+                                }
+                                target="_blank"
+                                rel="noreferrer"
+                                class="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
+                              >
+                                <Github className="h-4 w-4" />
+                                GitHub
+                              </a>
+                            )
+                          }
 
-                        {
-                          software.data.links?.download && (
-                            <a
-                              href={
-                                software.data.links.download
-                              }
-                              target="_blank"
-                              rel="noreferrer"
-                              class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-blue-300 hover:text-blue-600"
-                            >
-                              <Download
-                                className="h-4 w-4"
-                              />
-                              Download
-                            </a>
-                          )
-                        }
+                          {
+                            applicationLink && (
+                              <a
+                                href={
+                                  applicationLink
+                                }
+                                target="_blank"
+                                rel="noreferrer"
+                                class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-blue-300 hover:text-blue-600"
+                              >
+                                <ExternalLink
+                                  className="h-4 w-4"
+                                />
 
-                        {
-                          software.data.paper && (
-                            <a
-                              href={software.data.paper.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-blue-300 hover:text-blue-600"
-                            >
-                              <FileText
-                                className="h-4 w-4"
-                              />
-                              Paper
-                            </a>
-                          )
-                        }
-                      </div>
-                    </article>
-                  );
-                })
+                                <span
+                                  data-ko="실행"
+                                  data-en="Launch App"
+                                >
+                                  Launch App
+                                </span>
+                              </a>
+                            )
+                          }
+
+                          {
+                            software.data.links
+                              ?.documentation && (
+                              <a
+                                href={
+                                  software.data
+                                    .links
+                                    .documentation
+                                }
+                                target="_blank"
+                                rel="noreferrer"
+                                class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-blue-300 hover:text-blue-600"
+                              >
+                                <BookOpen
+                                  className="h-4 w-4"
+                                />
+
+                                <span
+                                  data-ko="문서"
+                                  data-en="Docs"
+                                >
+                                  Docs
+                                </span>
+                              </a>
+                            )
+                          }
+
+                          {
+                            software.data.links
+                              ?.download && (
+                              <a
+                                href={
+                                  software.data
+                                    .links.download
+                                }
+                                target="_blank"
+                                rel="noreferrer"
+                                class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-blue-300 hover:text-blue-600"
+                              >
+                                <Download
+                                  className="h-4 w-4"
+                                />
+
+                                <span
+                                  data-ko="다운로드"
+                                  data-en="Download"
+                                >
+                                  Download
+                                </span>
+                              </a>
+                            )
+                          }
+
+                          {
+                            software.data.paper && (
+                              <a
+                                href={
+                                  software.data
+                                    .paper.url
+                                }
+                                target="_blank"
+                                rel="noreferrer"
+                                class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-blue-300 hover:text-blue-600"
+                              >
+                                <FileText
+                                  className="h-4 w-4"
+                                />
+
+                                <span
+                                  data-ko="논문"
+                                  data-en="Paper"
+                                >
+                                  Paper
+                                </span>
+                              </a>
+                            )
+                          }
+                        </div>
+                      </article>
+                    );
+                  }
+                )
               }
             </div>
           </section>
@@ -561,6 +1128,10 @@ function getPrimaryLink(software: SoftwareEntry) {
       )
     }
   </main>
+
+  <!-- =====================================================
+       Floating Back to Top
+       ===================================================== -->
 
   <button
     id="back-to-top"
@@ -589,14 +1160,19 @@ function getPrimaryLink(software: SoftwareEntry) {
       return;
     }
 
-    if (page.dataset.backToTopInitialized === 'true') {
+    if (
+      page.dataset.backToTopInitialized ===
+      'true'
+    ) {
       return;
     }
 
-    page.dataset.backToTopInitialized = 'true';
+    page.dataset.backToTopInitialized =
+      'true';
 
     function updateBackToTopButton() {
-      const shouldShow = window.scrollY > 500;
+      const shouldShow =
+        window.scrollY > 500;
 
       backToTopButton.classList.toggle(
         'opacity-0',
@@ -629,17 +1205,22 @@ function getPrimaryLink(software: SoftwareEntry) {
       );
     }
 
-    backToTopButton.addEventListener('click', () => {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth',
-      });
-    });
+    backToTopButton.addEventListener(
+      'click',
+      () => {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth',
+        });
+      }
+    );
 
     window.addEventListener(
       'scroll',
       updateBackToTopButton,
-      { passive: true }
+      {
+        passive: true,
+      }
     );
 
     updateBackToTopButton();

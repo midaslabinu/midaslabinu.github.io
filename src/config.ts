@@ -3,6 +3,7 @@ import heroImage from './assets/hero-real.jpg';
 export type NavChild = {
   text: string;
   link: string;
+  key: string;
 };
 
 export type NavItem = {
@@ -40,7 +41,6 @@ export const SITE = {
   },
 
   // Main navigation
-  // Menu order: Home → People → Research → Publications → Software → Contact
   nav: [
     {
       text: 'Home',
@@ -55,18 +55,22 @@ export const SITE = {
         {
           text: 'Principal Investigator',
           link: '/people#pi',
+          key: 'people.pi',
         },
         {
           text: 'Graduate Students',
           link: '/people#graduate',
+          key: 'people.graduate',
         },
         {
           text: 'Undergraduate Students',
           link: '/people#undergraduate',
+          key: 'people.undergraduate',
         },
         {
           text: 'Alumni',
           link: '/people#alumni',
+          key: 'people.alumni',
         },
       ],
     },
@@ -78,14 +82,17 @@ export const SITE = {
         {
           text: 'Bioinformatics',
           link: '/research#bioinformatics',
+          key: 'research.bioinformatics',
         },
         {
           text: 'Healthcare AI',
           link: '/research#healthcare-ai',
+          key: 'research.healthcare_ai',
         },
         {
           text: 'AI for Science & Engineering',
           link: '/research#ai-for-science-engineering',
+          key: 'research.ai_science',
         },
       ],
     },
@@ -97,18 +104,22 @@ export const SITE = {
         {
           text: 'Journal Articles',
           link: '/publications#journal',
+          key: 'publications.journal',
         },
         {
           text: 'Conference Papers',
           link: '/publications#conference',
+          key: 'publications.conference',
         },
         {
           text: 'Patents',
           link: '/publications#patent',
+          key: 'publications.patents',
         },
         {
           text: 'Books & Book Chapters',
           link: '/publications#book',
+          key: 'publications.books',
         },
       ],
     },
@@ -127,17 +138,17 @@ export const SITE = {
   // Additional pages can be added later.
   customPages: [] as NavItem[],
 
-  // Initial development uses English only.
-  // Korean/English parallel support will be added later.
+  // MIDAS Lab supports Korean and English.
+  // Korean is used as the default language.
   i18n: {
-    enabled: false,
-    defaultLocale: 'en',
+    enabled: true,
+    defaultLocale: 'ko',
   },
 };
 
 export const LOCALE = {
-  lang: 'en',
-  langTag: ['en-US'],
+  lang: 'ko',
+  langTag: ['ko-KR', 'en-US'],
 } as const;
 
 export const LOGO_IMAGE = {
@@ -162,4 +173,4 @@ export const DEFAULT_LANG:
   | 'fr'
   | 'de'
   | 'es'
-  | 'ru' = 'en';
+  | 'ru' = 'ko';

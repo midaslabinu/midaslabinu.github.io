@@ -26,7 +26,6 @@ const {
 const {
   name,
   avatar,
-  bio,
   email,
   website,
   linkedin,
@@ -35,20 +34,44 @@ const {
   googleScholar,
 } = member.data;
 
-/**
- * Examples:
- *
- * team member:
- * hyundoo-jeong
- *
- * people/current member:
- * current/dongin-kim
- *
- * people/alumni member:
- * alumni/dong-hyun-oh
- *
- * In every case, only the final file-name portion is used.
- */
+/* =========================================================
+   Multilingual data
+   ========================================================= */
+
+const nameKo =
+  typeof name === 'string'
+    ? name
+    : name.ko;
+
+const nameEn =
+  typeof name === 'string'
+    ? name
+    : name.en;
+
+const titlesKo =
+  Array.isArray(member.data.title)
+    ? member.data.title
+    : member.data.title?.ko ?? [];
+
+const titlesEn =
+  Array.isArray(member.data.title)
+    ? member.data.title
+    : member.data.title?.en ?? [];
+
+const bioKo =
+  typeof member.data.bio === 'string'
+    ? member.data.bio
+    : member.data.bio?.ko ?? '';
+
+const bioEn =
+  typeof member.data.bio === 'string'
+    ? member.data.bio
+    : member.data.bio?.en ?? '';
+
+/* =========================================================
+   Member URL
+   ========================================================= */
+
 const memberSlug =
   member.id
     .replace(/\.[^/.]+$/, '')
@@ -57,7 +80,10 @@ const memberSlug =
 
 const memberUrl = `${basePath}/${memberSlug}`;
 
-// Color mapping for title badges
+/* =========================================================
+   Badge colors
+   ========================================================= */
+
 const badgeColors = [
   'text-blue-700 bg-blue-50 border-blue-100',
   'text-purple-700 bg-purple-50 border-purple-100',
@@ -68,6 +94,7 @@ const badgeColors = [
 ---
 
 <div class="group flex flex-col items-center text-center">
+
   <!-- Avatar container -->
   <div
     class="relative mb-4 aspect-[4/5] w-48 overflow-hidden rounded-xl bg-gray-100 transition-shadow group-hover:shadow-lg"
@@ -75,11 +102,11 @@ const badgeColors = [
     <a
       href={memberUrl}
       class="block h-full w-full"
-      aria-label={`View profile of ${name}`}
+      aria-label={`View profile of ${nameEn}`}
     >
       <img
         src={avatar.src}
-        alt={name}
+        alt={nameEn}
         class="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
         loading="lazy"
       />
@@ -90,13 +117,14 @@ const badgeColors = [
       class="pointer-events-none absolute inset-0 flex items-center justify-center gap-3 bg-black/20 opacity-0 backdrop-blur-[2px] transition-opacity duration-300 group-hover:opacity-100"
     >
       <div class="pointer-events-auto flex flex-wrap justify-center gap-2 px-2">
+
         {
           email && (
             <a
               href={`mailto:${email}`}
               class="rounded-full bg-white p-2 text-gray-700 transition-all hover:scale-110 hover:text-blue-600"
               title="Email"
-              aria-label={`Email ${name}`}
+              aria-label={`Email ${nameEn}`}
             >
               <Mail className="h-4 w-4" />
             </a>
@@ -111,7 +139,7 @@ const badgeColors = [
               rel="noopener noreferrer"
               class="rounded-full bg-white p-2 text-gray-700 transition-all hover:scale-110 hover:text-blue-600"
               title="Website"
-              aria-label={`${name} website`}
+              aria-label={`${nameEn} website`}
             >
               <Globe className="h-4 w-4" />
             </a>
@@ -126,7 +154,7 @@ const badgeColors = [
               rel="noopener noreferrer"
               class="rounded-full bg-white p-2 text-gray-700 transition-all hover:scale-110 hover:text-blue-600"
               title="LinkedIn"
-              aria-label={`${name} LinkedIn`}
+              aria-label={`${nameEn} LinkedIn`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -156,7 +184,7 @@ const badgeColors = [
               rel="noopener noreferrer"
               class="rounded-full bg-white p-2 text-gray-700 transition-all hover:scale-110 hover:text-blue-600"
               title="GitHub"
-              aria-label={`${name} GitHub`}
+              aria-label={`${nameEn} GitHub`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -184,7 +212,7 @@ const badgeColors = [
               rel="noopener noreferrer"
               class="rounded-full bg-white p-2 text-gray-700 transition-all hover:scale-110 hover:text-blue-400"
               title="Twitter"
-              aria-label={`${name} Twitter`}
+              aria-label={`${nameEn} Twitter`}
             >
               <Twitter className="h-4 w-4" />
             </a>
@@ -199,48 +227,65 @@ const badgeColors = [
               rel="noopener noreferrer"
               class="rounded-full bg-white p-2 text-gray-700 transition-all hover:scale-110 hover:text-blue-600"
               title="Google Scholar"
-              aria-label={`${name} Google Scholar`}
+              aria-label={`${nameEn} Google Scholar`}
             >
               <GraduationCap className="h-4 w-4" />
             </a>
           )
         }
+
       </div>
     </div>
   </div>
 
-  <!-- Member information -->
+  <!-- Member name -->
   <a
     href={memberUrl}
     class="mb-2 decoration-blue-600 underline-offset-2 hover:underline"
   >
     <h3 class="text-lg font-semibold text-gray-900">
-      {name}
+      <span
+        data-ko={nameKo}
+        data-en={nameEn}
+      >
+        {nameEn}
+      </span>
     </h3>
   </a>
 
+  <!-- Member title badges -->
   {
-    member.data.title &&
-      member.data.title.length > 0 && (
-        <div class="mb-3 flex flex-wrap justify-center gap-2 px-2">
-          {member.data.title.map((item, index) => (
+    titlesEn.length > 0 && (
+      <div class="mb-3 flex flex-wrap justify-center gap-2 px-2">
+        {titlesEn.map((item, index) => (
+          <span
+            class={`inline-block rounded-full border px-2 py-0.5 text-xs font-medium ${
+              badgeColors[index % badgeColors.length]
+            }`}
+          >
             <span
-              class={`inline-block rounded-full border px-2 py-0.5 text-xs font-medium ${
-                badgeColors[index % badgeColors.length]
-              }`}
+              data-ko={titlesKo[index] ?? item}
+              data-en={item}
             >
               {item}
             </span>
-          ))}
-        </div>
-      )
+          </span>
+        ))}
+      </div>
+    )
   }
 
+  <!-- Member bio -->
   {
-    bio && (
-      <p class="line-clamp-2 px-2 text-sm text-gray-500">
-        {bio}
+    (bioKo || bioEn) && (
+      <p
+        class="line-clamp-2 px-2 text-sm text-gray-500"
+        data-ko={bioKo}
+        data-en={bioEn}
+      >
+        {bioEn}
       </p>
     )
   }
+
 </div>

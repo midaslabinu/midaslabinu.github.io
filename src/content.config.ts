@@ -1,6 +1,7 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
+
 /* =========================================================
    Publications
    ========================================================= */
@@ -13,22 +14,172 @@ const publications = defineCollection({
 
   schema: ({ image }) =>
     z.object({
-      title: z.string(),
-      authors: z.array(z.string()),
-      year: z.number(),
-      venue: z.string(),
+      /*
+       * 논문 / 특허 제목
+       *
+       * 기본적으로 영문 제목을 그대로 사용할 수 있으며,
+       * 필요한 경우에만 한/영 제목을 별도로 지정할 수 있습니다.
+       *
+       * 영문:
+       * title: "Example Paper Title"
+       *
+       * 한/영:
+       * title:
+       *   ko: "논문 제목"
+       *   en: "Paper Title"
+       */
+      title: z.union([
+        z.string(),
+        z.object({
+          ko: z.string(),
+          en: z.string(),
+        }),
+      ]),
 
+      /*
+       * 저자 / 발명자
+       *
+       * 일반 영문 publication:
+       * authors:
+       *   - "Hyundoo Jeong"
+       *   - "John Smith"
+       *
+       * 국문 이름이 필요한 publication:
+       * authors:
+       *   ko:
+       *     - "정현두"
+       *     - "홍길동"
+       *   en:
+       *     - "Hyundoo Jeong"
+       *     - "Gildong Hong"
+       */
+      authors: z.union([
+        z.array(z.string()),
+        z.object({
+          ko: z.array(z.string()),
+          en: z.array(z.string()),
+        }),
+      ]),
+
+      /*
+       * 출판 / 등록 / 출원 연도
+       */
+      year: z.number(),
+
+      /*
+       * 정렬용 날짜
+       *
+       * 같은 연도 내에서 최신 실적을 위에 표시하기 위해 사용합니다.
+       *
+       * 논문:
+       *   실제 게재일 또는 online publication date
+       *
+       * 학술대회:
+       *   발표일 또는 학술대회 시작일
+       *
+       * 등록 특허:
+       *   등록일
+       *
+       * 출원 특허:
+       *   출원일
+       *
+       * 예:
+       * date: 2026-06-01
+       *
+       * 기존 publication과의 호환성을 위해 optional로 둡니다.
+       */
+      date: z.coerce.date().optional(),
+
+      /*
+       * 학술지 / 학술대회 / 특허 정보
+       *
+       * 영문 publication:
+       * venue: "IEEE Access"
+       *
+       * 국문 publication:
+       * venue:
+       *   ko: "한국정보과학회 논문지"
+       *   en: "Journal of KIISE"
+       */
+      venue: z.union([
+        z.string(),
+        z.object({
+          ko: z.string(),
+          en: z.string(),
+        }),
+      ]),
+
+      /*
+       * Publication 종류
+       */
       type: z
-        .enum(['paper', 'book', 'patent', 'software'])
+        .enum([
+          'paper',
+          'book',
+          'patent',
+          'software',
+        ])
         .default('paper'),
 
       cover: image().optional(),
+
       doi: z.string().optional(),
-      award: z.string().optional(),
 
-      equalContributionAuthors: z.array(z.string()).optional(),
-      correspondingAuthors: z.array(z.string()).optional(),
+      /*
+       * Award
+       *
+       * 기존 Markdown 파일과의 호환성을 위해
+       * 기존 string 방식도 그대로 허용합니다.
+       *
+       * 영문:
+       * award: "Best Paper Award"
+       *
+       * 한/영:
+       * award:
+       *   ko: "우수논문상"
+       *   en: "Best Paper Award"
+       */
+      award: z
+        .union([
+          z.string(),
+          z.object({
+            ko: z.string(),
+            en: z.string(),
+          }),
+        ])
+        .optional(),
 
+      /*
+       * 공동 제1저자
+       *
+       * 저자 식별은 영문 이름을 기준으로 합니다.
+       *
+       * 예:
+       * equalContributionAuthors:
+       *   - "Heechang Shin"
+       *   - "Taeyeong Jang"
+       */
+      equalContributionAuthors: z
+        .array(z.string())
+        .optional(),
+
+      /*
+       * 교신저자
+       *
+       * 저자 식별은 영문 이름을 기준으로 합니다.
+       *
+       * 예:
+       * correspondingAuthors:
+       *   - "Hyundoo Jeong"
+       *   - "Hyun-Myung Woo"
+       */
+      correspondingAuthors: z
+        .array(z.string())
+        .optional(),
+
+      /*
+       * 외부 링크
+       */
       links: z
         .object({
           // 논문, 북챕터, 특허 등의 공식 상세 페이지
@@ -51,14 +202,45 @@ const publications = defineCollection({
         })
         .optional(),
 
+      /*
+       * Featured publication 여부
+       */
       featured: z.boolean().default(false),
 
+      /*
+       * Award / Patent Status 등의 badge
+       *
+       * 기존:
+       * badges:
+       *   - text: "Pending"
+       *     type: "blue"
+       *
+       * 다국어:
+       * badges:
+       *   - text:
+       *       ko: "출원"
+       *       en: "Pending"
+       *     type: "blue"
+       */
       badges: z
         .array(
           z.object({
-            text: z.string(),
+            text: z.union([
+              z.string(),
+              z.object({
+                ko: z.string(),
+                en: z.string(),
+              }),
+            ]),
+
             type: z
-              .enum(['gold', 'blue', 'red', 'green', 'default'])
+              .enum([
+                'gold',
+                'blue',
+                'red',
+                'green',
+                'default',
+              ])
               .default('default'),
           })
         )
@@ -114,7 +296,6 @@ const books = defineCollection({
 /* =========================================================
    People
    ========================================================= */
-
 const people = defineCollection({
   loader: glob({
     pattern: '**/*.{md,mdx}',
@@ -123,7 +304,14 @@ const people = defineCollection({
 
   schema: ({ image }) =>
     z.object({
-      name: z.string(),
+    
+      name: z.union([
+        z.string(),
+        z.object({
+          ko: z.string(),
+          en: z.string(),
+        }),
+      ]),
 
       role: z.enum([
         'Principal Investigator',
@@ -137,11 +325,45 @@ const people = defineCollection({
         'Undergraduate',
         'Alumni',
       ]),
+/*
+      title: z
+        .object({
+          ko: z.array(z.string()),
+          en: z.array(z.string()),
+        })
+        .optional(),
 
-      title: z.array(z.string()).optional(),
       avatar: image(),
-      bio: z.string().optional(),
 
+      bio: z
+        .object({
+          ko: z.string(),
+          en: z.string(),
+        })
+        .optional(),
+*/
+title: z
+  .union([
+    z.array(z.string()),
+    z.object({
+      ko: z.array(z.string()),
+      en: z.array(z.string()),
+    }),
+  ])
+  .optional(),
+
+avatar: image(),
+
+bio: z
+  .union([
+    z.string(),
+    z.object({
+      ko: z.string(),
+      en: z.string(),
+    }),
+  ])
+  .optional(),
+  // md 수정후 삭제 
       email: z.string().optional(),
       website: z.string().optional(),
       linkedin: z.string().optional(),
@@ -152,6 +374,7 @@ const people = defineCollection({
       weight: z.number().default(100),
     }),
 });
+
 
 /* =========================================================
    Team
@@ -165,7 +388,13 @@ const team = defineCollection({
 
   schema: ({ image }) =>
     z.object({
-      name: z.string(),
+      name: z.union([
+        z.string(),
+        z.object({
+          ko: z.string(),
+          en: z.string(),
+        }),
+      ]),
 
       role: z.enum([
         'Principal Investigator',
@@ -204,29 +433,37 @@ const news = defineCollection({
     pattern: '**/*.{md,mdx}',
     base: './src/content/news',
   }),
+    schema: ({ image }) =>
+      z.object({
+        title: z.object({
+          ko: z.string(),
+          en: z.string(),
+        }),
 
-  schema: ({ image }) =>
-    z.object({
-      title: z.string(),
-      date: z.coerce.date(),
-      summary: z.string(),
+        date: z.coerce.date(),
 
-      image: image().optional(),
+        summary: z.object({
+          ko: z.string(),
+          en: z.string(),
+        }),
 
-      published: z.boolean().default(true),
-      readMore: z.boolean().default(false),
+        image: image().optional(),
 
-      links: z
-        .object({
-          view: z.string().optional(),
-        })
-        .optional(),
-    }),
+        published: z.boolean().default(true),
+        readMore: z.boolean().default(false),
+
+        links: z
+          .object({
+            view: z.string().optional(),
+          })
+          .optional(),
+      }),
 });
 
 /* =========================================================
    Research
    ========================================================= */
+
 
 const research = defineCollection({
   loader: glob({
@@ -236,13 +473,23 @@ const research = defineCollection({
 
   schema: ({ image }) =>
     z.object({
-      title: z.string(),
+      title: z.union([
+        z.string(),
+        z.object({
+          ko: z.string(),
+          en: z.string(),
+        }),
+      ]),
 
-      // Research 페이지 내부 섹션 ID
       slug: z.string(),
 
-      // 대분류의 짧은 소개
-      description: z.string(),
+      description: z.union([
+        z.string(),
+        z.object({
+          ko: z.string(),
+          en: z.string(),
+        }),
+      ]),
 
       cover: image().optional(),
 
@@ -277,6 +524,8 @@ const patents = defineCollection({
   }),
 });
 
+
+
 /* =========================================================
    Software
    ========================================================= */
@@ -294,7 +543,7 @@ const patents = defineCollection({
  * - 분석 파이프라인
  * - 벤치마크 및 연구 리소스
  *
- * 현재 category는 모두 Bioinformatics이지만,
+ * 현재 category는 대부분 Bioinformatics이지만,
  * 향후 분야 확장을 위해 스키마에는 유지합니다.
  */
 const softwares = defineCollection({
@@ -309,18 +558,50 @@ const softwares = defineCollection({
          기본 정보
          ----------------------------------------------------- */
 
+      /*
+       * Software 이름은 고유명사이므로
+       * 한글/영문 페이지에서 동일하게 표시합니다.
+       *
+       * 예:
+       * title: "PRIME"
+       */
       title: z.string(),
 
-      // Software 카드에 표시할 1~2문장의 짧은 설명
-      description: z.string(),
+      /*
+       * Software 카드에 표시할 1~2문장의 설명입니다.
+       *
+       * 기존 영문 MD와의 호환성을 위해 string도 허용하며,
+       * 한글화를 적용할 경우 ko/en 구조를 사용합니다.
+       *
+       * 기존:
+       * description: "A computational tool for..."
+       *
+       * 다국어:
+       * description:
+       *   ko: "..."
+       *   en: "..."
+       */
+      description: z.union([
+        z.string(),
+        z.object({
+          ko: z.string(),
+          en: z.string(),
+        }),
+      ]),
 
-      // 개발자 정보는 선택 사항
+      /*
+       * 개발자 이름은 원래 표기를 유지합니다.
+       */
       developers: z.array(z.string()).optional(),
 
-      // 최초 논문 발표 또는 공개 연도
+      /*
+       * 최초 논문 발표 또는 공개 연도
+       */
       year: z.number().optional(),
 
-      // Software 전용 이미지 또는 로고
+      /*
+       * Software 전용 이미지 또는 로고
+       */
       logo: image().optional(),
 
       /* -----------------------------------------------------
@@ -328,8 +609,13 @@ const softwares = defineCollection({
          ----------------------------------------------------- */
 
       /*
-       * 현재는 Bioinformatics가 기본값입니다.
-       * 다른 카테고리가 추가되기 전까지 화면에서는 숨깁니다.
+       * category 값은 내부 데이터에서는 영어로 유지합니다.
+       *
+       * 화면에서는 software.astro에서
+       * 언어에 따라 번역하여 표시할 수 있습니다.
+       *
+       * Bioinformatics
+       * → 생물정보학
        */
       category: z
         .enum([
@@ -340,7 +626,14 @@ const softwares = defineCollection({
         .default('Bioinformatics'),
 
       /*
-       * 코드 또는 서비스의 형태
+       * Software 형태 역시 내부 데이터에서는 영어로 유지하고
+       * 화면에서 번역합니다.
+       *
+       * Research Code
+       * Web Application
+       * Software Package
+       * Pipeline
+       * Benchmark / Resource
        */
       type: z
         .enum([
@@ -354,13 +647,21 @@ const softwares = defineCollection({
 
       /*
        * 개발 언어 또는 주요 기술
-       * 예: Python, R, MATLAB, Java, C++, TensorFlow
+       *
+       * 예:
+       * Python
+       * R
+       * MATLAB
+       * Java
+       * C++
+       * TensorFlow
+       *
+       * 기술명은 번역하지 않고 그대로 표시합니다.
        */
       languages: z.array(z.string()).optional(),
 
       /*
        * 세부 검색 및 분류용 태그
-       * 현재 화면에서는 배지로 일부 표시할 수 있습니다.
        */
       tags: z.array(z.string()).optional(),
 
@@ -370,7 +671,9 @@ const softwares = defineCollection({
 
       /*
        * Software와 연결된 대표 논문입니다.
-       * 카드에서 논문 제목, 학술지, 연도와 링크를 표시합니다.
+       *
+       * 논문 제목과 학술지명은 공식 서지정보이므로
+       * 한글/영문 페이지에서 원문 그대로 표시합니다.
        */
       paper: z
         .object({
@@ -421,6 +724,10 @@ const softwares = defineCollection({
          상태 및 표시 설정
          ----------------------------------------------------- */
 
+      /*
+       * status 역시 내부 데이터에서는 영어로 유지하고
+       * software.astro에서 한글로 변환하여 표시합니다.
+       */
       status: z
         .enum([
           'Active',
@@ -441,7 +748,9 @@ const softwares = defineCollection({
        */
       featured: z.boolean().default(false),
 
-      // false이면 Software 페이지에서 숨깁니다.
+      /*
+       * false이면 Software 페이지에서 숨깁니다.
+       */
       published: z.boolean().default(true),
 
       /*
@@ -451,6 +760,8 @@ const softwares = defineCollection({
       order: z.number().default(100),
     }),
 });
+
+
 
 /* =========================================================
    Honors

@@ -4,38 +4,126 @@ import PublicationItem from '../components/PublicationItem.astro';
 import { getCollection } from 'astro:content';
 import { ArrowUp } from 'lucide-react';
 
+
+const getSortTitle = (
+  title:
+    | string
+    | {
+        ko: string;
+        en: string;
+      }
+) => {
+  if (typeof title === 'string') {
+    return title;
+  }
+
+  return title.en;
+};
+
 const allPublications = (await getCollection('publications')).sort(
   (a, b) => {
-    const yearDifference = b.data.year - a.data.year;
+    /*
+     * 1. 연도 최신순
+     */
+    const yearDifference =
+      b.data.year - a.data.year;
 
     if (yearDifference !== 0) {
       return yearDifference;
     }
 
-    return a.data.title.localeCompare(b.data.title);
+    /*
+     * 2. 같은 연도에서는 게재일 최신순
+     *
+     * date가 없는 기존 논문은 해당 연도의
+     * 1월 1일로 간주합니다.
+     */
+    const dateA = a.data.date
+      ? new Date(a.data.date).getTime()
+      : new Date(`${a.data.year}-01-01`).getTime();
+
+    const dateB = b.data.date
+      ? new Date(b.data.date).getTime()
+      : new Date(`${b.data.year}-01-01`).getTime();
+
+    const dateDifference =
+      dateB - dateA;
+
+    if (dateDifference !== 0) {
+      return dateDifference;
+    }
+
+    /*
+     * 3. 날짜도 같으면 제목순
+     */
+    return getSortTitle(
+      a.data.title
+    ).localeCompare(
+      getSortTitle(b.data.title)
+    );
   }
 );
 
 const categories = [
   {
     id: 'journal',
-    label: 'Journal Articles',
-    description: 'Peer-reviewed journal articles',
+    label: {
+      ko: '학술지 논문',
+      en: 'Journal Articles',
+    },
+    description: {
+      ko: '국제 및 국내 학술지에 게재된 연구 논문',
+      en: 'Peer-reviewed journal articles',
+    },
+    empty: {
+      ko: '등록된 학술지 논문이 없습니다.',
+      en: 'No journal articles have been added yet.',
+    },
   },
   {
     id: 'conference',
-    label: 'Conference Papers',
-    description: 'Conference papers and proceedings',
+    label: {
+      ko: '학술대회 논문',
+      en: 'Conference Papers',
+    },
+    description: {
+      ko: '학술대회에서 발표된 논문 및 프로시딩',
+      en: 'Conference papers and proceedings',
+    },
+    empty: {
+      ko: '등록된 학술대회 논문이 없습니다.',
+      en: 'No conference papers have been added yet.',
+    },
   },
   {
     id: 'patent',
-    label: 'Patents',
-    description: 'Registered and pending patents',
+    label: {
+      ko: '특허',
+      en: 'Patents',
+    },
+    description: {
+      ko: '등록 및 출원된 특허',
+      en: 'Registered and pending patents',
+    },
+    empty: {
+      ko: '등록된 특허가 없습니다.',
+      en: 'No patents have been added yet.',
+    },
   },
   {
     id: 'book',
-    label: 'Books',
-    description: 'Books and book chapters',
+    label: {
+      ko: '도서 및 북챕터',
+      en: 'Books & Book Chapters',
+    },
+    description: {
+      ko: '저서 및 도서에 수록된 북챕터',
+      en: 'Books and book chapters',
+    },
+    empty: {
+      ko: '등록된 도서 및 북챕터가 없습니다.',
+      en: 'No books or book chapters have been added yet.',
+    },
   },
 ] as const;
 
@@ -70,19 +158,32 @@ const getPublicationsByCategory = (
     id="publication-page-top"
     class="mx-auto max-w-5xl px-4 py-12 sm:py-20"
   >
-    <!-- Page header -->
+    <!-- =====================================================
+         Page Header
+         ===================================================== -->
     <header class="mb-12">
       <h1 class="mb-4 text-4xl font-bold text-gray-900">
-        Publications
+        <span
+          data-ko="연구실적"
+          data-en="Publications"
+        >
+          Publications
+        </span>
       </h1>
 
-      <p class="max-w-3xl text-lg leading-8 text-gray-600">
+      <p
+        class="max-w-3xl text-lg leading-8 text-gray-600"
+        data-ko="MIDAS Lab의 학술지 논문, 학술대회 논문, 특허, 도서 및 북챕터를 소개합니다."
+        data-en="A collection of our journal articles, conference papers, patents, books, and book chapters."
+      >
         A collection of our journal articles, conference papers,
-        patents, and books.
+        patents, books, and book chapters.
       </p>
     </header>
 
-    <!-- Category navigation -->
+    <!-- =====================================================
+         Category Navigation
+         ===================================================== -->
     <nav
       aria-label="Publication categories"
       class="mb-16 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5"
@@ -100,7 +201,12 @@ const getPublicationsByCategory = (
                 href={`#${category.id}`}
                 class="group flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-blue-50 hover:text-blue-600"
               >
-                <span>{category.label}</span>
+                <span
+                  data-ko={category.label.ko}
+                  data-en={category.label.en}
+                >
+                  {category.label.en}
+                </span>
 
                 <span
                   class="ml-3 min-w-7 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-center text-xs text-gray-500 shadow-sm transition-colors group-hover:border-blue-200 group-hover:text-blue-600"
@@ -114,12 +220,24 @@ const getPublicationsByCategory = (
       </div>
     </nav>
 
-    <!-- Category sections -->
+    <!-- =====================================================
+         Category Sections
+         ===================================================== -->
     <div class="space-y-20">
       {
         categories.map((category) => {
           const publications =
             getPublicationsByCategory(category.id);
+
+          const countKo =
+            `${publications.length}건`;
+
+          const countEn =
+            `${publications.length} ${
+              publications.length === 1
+                ? 'entry'
+                : 'entries'
+            }`;
 
           return (
             <section
@@ -139,21 +257,30 @@ const getPublicationsByCategory = (
                       id={`${category.id}-heading`}
                       class="text-3xl font-bold text-gray-900"
                     >
-                      {category.label}
+                      <span
+                        data-ko={category.label.ko}
+                        data-en={category.label.en}
+                      >
+                        {category.label.en}
+                      </span>
                     </h2>
 
                     <p class="mt-2 text-sm text-gray-500">
-                      {category.description}
+                      <span
+                        data-ko={category.description.ko}
+                        data-en={category.description.en}
+                      >
+                        {category.description.en}
+                      </span>
                     </p>
                   </div>
 
-                  <span class="text-sm text-gray-500">
-                    {publications.length}{' '}
-                    {
-                      publications.length === 1
-                        ? 'entry'
-                        : 'entries'
-                    }
+                  <span
+                    class="text-sm text-gray-500"
+                    data-ko={countKo}
+                    data-en={countEn}
+                  >
+                    {countEn}
                   </span>
                 </div>
               </div>
@@ -171,10 +298,12 @@ const getPublicationsByCategory = (
                   <div
                     class="rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center"
                   >
-                    <p class="text-sm text-gray-500">
-                      No{' '}
-                      {category.label.toLowerCase()}{' '}
-                      have been added yet.
+                    <p
+                      class="text-sm text-gray-500"
+                      data-ko={category.empty.ko}
+                      data-en={category.empty.en}
+                    >
+                      {category.empty.en}
                     </p>
                   </div>
                 )
@@ -185,13 +314,22 @@ const getPublicationsByCategory = (
       }
     </div>
 
+    <!-- =====================================================
+         Empty Publications
+         ===================================================== -->
     {
       allPublications.length === 0 && (
         <div
           class="mt-16 rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 py-12 text-center"
         >
           <p class="text-gray-500">
-            No publications found. Add Markdown files under
+            <span
+              data-ko="등록된 연구실적이 없습니다. 다음 경로에 Markdown 파일을 추가하세요:"
+              data-en="No publications found. Add Markdown files under:"
+            >
+              No publications found. Add Markdown files under:
+            </span>
+
             <code
               class="mx-1 rounded bg-gray-100 px-2 py-1 text-sm"
             >
@@ -203,7 +341,9 @@ const getPublicationsByCategory = (
     }
   </main>
 
-  <!-- Floating Back to Top button -->
+  <!-- =====================================================
+       Floating Back to Top Button
+       ===================================================== -->
   <button
     id="back-to-top"
     type="button"

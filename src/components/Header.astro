@@ -46,8 +46,12 @@ const { nav, i18n, customPages } = SITE;
             <span
               class="hidden pb-0.5 text-sm font-light text-gray-500 sm:inline"
             >
-              {SITE.university}
-            </span>
+            <span
+              data-ko="인천대학교"
+              data-en="Incheon National University"
+            >
+              Incheon National University
+            </span>            
           </div>
         </a>
       </div>
@@ -96,14 +100,15 @@ const { nav, i18n, customPages } = SITE;
                     <div
                       class="overflow-hidden rounded-xl border border-gray-100 bg-white py-2 shadow-xl"
                     >
-                      {item.children.map((child) => (
-                        <a
-                          href={child.link}
-                          class="block px-4 py-2.5 text-sm text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600 focus:bg-blue-50 focus:text-blue-600 focus:outline-none"
-                        >
-                          {child.text}
-                        </a>
-                      ))}
+                    {item.children.map((child) => (
+                      <a
+                        href={child.link}
+                        class="block px-4 py-2.5 text-sm text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600 focus:bg-blue-50 focus:text-blue-600 focus:outline-none"
+                        data-i18n-key={child.key}
+                      >
+                        {child.text}
+                      </a>
+                    ))}
                     </div>
                   </div>
                 </div>
@@ -292,14 +297,15 @@ const { nav, i18n, customPages } = SITE;
                 class="mobile-submenu hidden pb-3"
               >
                 <div class="ml-4 border-l-2 border-blue-100 pl-3">
-                  {item.children.map((child) => (
-                    <a
-                      href={child.link}
-                      class="block rounded-lg px-4 py-3 text-base text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
-                    >
-                      {child.text}
-                    </a>
-                  ))}
+                {item.children.map((child) => (
+                  <a
+                    href={child.link}
+                    class="block rounded-lg px-4 py-3 text-base text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                    data-i18n-key={child.key}
+                  >
+                    {child.text}
+                  </a>
+                ))}
                 </div>
               </div>
             </div>

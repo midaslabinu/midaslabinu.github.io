@@ -4,34 +4,113 @@ import { getCollection, render } from 'astro:content';
 
 export async function getStaticPaths() {
   const researchAreas = await getCollection('research');
-  return researchAreas.map(area => ({
-    params: { slug: area.id.replace(/\.[^/.]+$/, "") },
-    props: { area },
+
+  return researchAreas.map((area) => ({
+    params: {
+      slug: area.id.replace(/\.[^/.]+$/, ""),
+    },
+    props: {
+      area,
+    },
   }));
 }
 
 const { area } = Astro.props;
 const { Content } = await render(area);
+
+const {
+  title,
+  description,
+  cover,
+} = area.data;
+
+const displayTitle =
+  typeof title === 'string'
+    ? title
+    : title.ko;
+
+const displayDescription =
+  typeof description === 'string'
+    ? description
+    : description.ko;
+
+const titleKo =
+  typeof title === 'string'
+    ? title
+    : title.ko;
+
+const titleEn =
+  typeof title === 'string'
+    ? title
+    : title.en;
+
+const descriptionKo =
+  typeof description === 'string'
+    ? description
+    : description.ko;
+
+const descriptionEn =
+  typeof description === 'string'
+    ? description
+    : description.en;
 ---
 
-<Layout title={area.data.title}>
+<Layout title={displayTitle}>
+
   <article class="max-w-4xl mx-auto px-4 py-12 sm:py-20">
-    <a href="/research" class="inline-flex items-center text-sm text-gray-500 hover:text-blue-600 mb-8 transition-colors">
+
+    <a
+      href="/research"
+      class="inline-flex items-center text-sm text-gray-500 hover:text-blue-600 mb-8 transition-colors"
+    >
       &larr; Back to Research
     </a>
 
+
     <header class="mb-12">
-      <h1 class="text-4xl font-bold text-gray-900 mb-6">{area.data.title}</h1>
-      {area.data.cover && (
-        <div class="w-full h-64 sm:h-96 rounded-2xl overflow-hidden bg-gray-100 mb-8">
-          <img src={area.data.cover.src} alt={area.data.title} class="w-full h-full object-cover" />
-        </div>
-      )}
-      <p class="text-xl text-gray-600 leading-relaxed">{area.data.description}</p>
+
+      <h1
+        class="text-4xl font-bold text-gray-900 mb-6"
+        data-ko={titleKo}
+        data-en={titleEn}
+      >
+        {displayTitle}
+      </h1>
+
+
+      {
+        cover && (
+          <div
+            class="w-full h-64 sm:h-96 rounded-2xl overflow-hidden bg-gray-100 mb-8"
+          >
+            <img
+              src={cover.src}
+              alt={displayTitle}
+              class="w-full h-full object-cover"
+            />
+          </div>
+        )
+      }
+
+
+      <p
+        class="text-xl text-gray-600 leading-relaxed"
+        data-ko={descriptionKo}
+        data-en={descriptionEn}
+      >
+        {displayDescription}
+      </p>
+
     </header>
 
-    <div class="prose prose-lg prose-blue max-w-none text-gray-700">
+
+    <div
+      class="prose prose-lg prose-blue max-w-none text-gray-700"
+    >
       <Content />
     </div>
+
+
   </article>
+
 </Layout>

@@ -17,38 +17,221 @@ import {
   ScrollText,
 } from 'lucide-react';
 
+/* =========================================================
+   Multilingual helpers
+   ========================================================= */
+
+type LocalizedText =
+  | string
+  | {
+      ko: string;
+      en: string;
+    };
+
+type LocalizedStringArray =
+  | string[]
+  | {
+      ko: string[];
+      en: string[];
+    };
+
+function getLocalizedText(
+  value?: LocalizedText
+) {
+  if (!value) {
+    return {
+      ko: '',
+      en: '',
+    };
+  }
+
+  if (typeof value === 'string') {
+    return {
+      ko: value,
+      en: value,
+    };
+  }
+
+  return {
+    ko: value.ko,
+    en: value.en,
+  };
+}
+
+function getLocalizedArray(
+  value?: LocalizedStringArray
+) {
+  if (!value) {
+    return {
+      ko: [],
+      en: [],
+    };
+  }
+
+  if (Array.isArray(value)) {
+    return {
+      ko: value,
+      en: value,
+    };
+  }
+
+  return {
+    ko: value.ko,
+    en: value.en,
+  };
+}
+
+/* =========================================================
+   Software labels
+   ========================================================= */
+
+const typeLabels: Record<
+  string,
+  {
+    ko: string;
+    en: string;
+  }
+> = {
+  'Research Code': {
+    ko: '연구 코드',
+    en: 'Research Code',
+  },
+
+  'Web Application': {
+    ko: '웹 애플리케이션',
+    en: 'Web Application',
+  },
+
+  'Software Package': {
+    ko: '소프트웨어 패키지',
+    en: 'Software Package',
+  },
+
+  Pipeline: {
+    ko: '분석 파이프라인',
+    en: 'Pipeline',
+  },
+
+  'Benchmark / Resource': {
+    ko: '벤치마크 / 연구 리소스',
+    en: 'Benchmark / Resource',
+  },
+};
+
+const statusLabels: Record<
+  string,
+  {
+    ko: string;
+    en: string;
+  }
+> = {
+  Active: {
+    ko: '활성',
+    en: 'Active',
+  },
+
+  Maintained: {
+    ko: '유지보수 중',
+    en: 'Maintained',
+  },
+
+  Archived: {
+    ko: '보관',
+    en: 'Archived',
+  },
+
+  Legacy: {
+    ko: '레거시',
+    en: 'Legacy',
+  },
+
+  'Under Development': {
+    ko: '개발 중',
+    en: 'Under Development',
+  },
+};
+
+/* =========================================================
+   Publications
+   ========================================================= */
+
 /**
- * Publications
+ * Publication title은 string 또는
+ * { ko, en } 형태일 수 있으므로
+ * 정렬에는 영문 제목을 사용합니다.
+ */
+function getPublicationTitle(
+  publication: Awaited<
+    ReturnType<typeof getCollection<'publications'>>
+  >[number]
+): string {
+  return getLocalizedText(
+    publication.data.title
+  ).en;
+}
+
+/**
+ * Publications 정렬
  *
- * 현재 Publications 페이지와 동일하게 전체 publication 컬렉션을
- * 최신 연도순으로 정렬합니다.
+ * 1. 최신 연도
+ * 2. 같은 연도에서는 date가 있으면 최신 날짜
+ * 3. 제목
  */
-const papers = (await getCollection('publications')).sort(
-  (a, b) => {
-    const yearDifference = b.data.year - a.data.year;
+const papers = (
+  await getCollection('publications')
+).sort((a, b) => {
+  const yearDifference =
+    b.data.year - a.data.year;
 
-    if (yearDifference !== 0) {
-      return yearDifference;
-    }
-
-    return a.data.title.localeCompare(b.data.title);
+  if (yearDifference !== 0) {
+    return yearDifference;
   }
-);
 
-/**
- * Books
- */
-const books = (await getCollection('books')).sort(
-  (a, b) => {
-    const yearDifference = b.data.year - a.data.year;
+  /*
+   * publications schema에 date가 있는 경우
+   * 같은 연도 내에서 최신 게재일을 먼저 표시합니다.
+   */
+  const dateA = a.data.date
+    ? a.data.date.valueOf()
+    : 0;
 
-    if (yearDifference !== 0) {
-      return yearDifference;
-    }
+  const dateB = b.data.date
+    ? b.data.date.valueOf()
+    : 0;
 
-    return a.data.title.localeCompare(b.data.title);
+  if (dateA !== dateB) {
+    return dateB - dateA;
   }
-);
+
+  return getPublicationTitle(
+    a
+  ).localeCompare(
+    getPublicationTitle(b)
+  );
+});
+
+/* =========================================================
+   Books
+   ========================================================= */
+
+const books = (
+  await getCollection('books')
+).sort((a, b) => {
+  const yearDifference =
+    b.data.year - a.data.year;
+
+  if (yearDifference !== 0) {
+    return yearDifference;
+  }
+
+  return a.data.title.localeCompare(
+    b.data.title
+  );
+});
+
+/* =========================================================
+   Software
+   ========================================================= */
 
 /**
  * Software의 대표 연도
@@ -58,14 +241,34 @@ const books = (await getCollection('books')).sort(
  * 3. 둘 다 없으면 0
  */
 const getSoftwareYear = (
-  software: Awaited<ReturnType<typeof getCollection<'softwares'>>>[number]
-) => software.data.year ?? software.data.paper?.year ?? 0;
+  software: Awaited<
+    ReturnType<typeof getCollection<'softwares'>>
+  >[number]
+) =>
+  software.data.year ??
+  software.data.paper?.year ??
+  0;
+
+/**
+ * Software 정렬용 제목
+ */
+function getSoftwareTitle(
+  software: Awaited<
+    ReturnType<typeof getCollection<'softwares'>>
+  >[number]
+): string {
+  return getLocalizedText(
+    software.data.title
+  ).en;
+}
 
 /**
  * Research Software
  *
- * 현재 software 스키마에는 date 필드가 없으므로
- * year 또는 paper.year를 사용합니다.
+ * 정렬:
+ * 1. 최신 연도
+ * 2. order
+ * 3. 영문 제목
  */
 const softwares = (
   await getCollection(
@@ -74,72 +277,100 @@ const softwares = (
   )
 ).sort((a, b) => {
   const yearDifference =
-    getSoftwareYear(b) - getSoftwareYear(a);
+    getSoftwareYear(b) -
+    getSoftwareYear(a);
 
   if (yearDifference !== 0) {
     return yearDifference;
   }
 
   if (a.data.order !== b.data.order) {
-    return a.data.order - b.data.order;
+    return (
+      a.data.order -
+      b.data.order
+    );
   }
 
-  return a.data.title.localeCompare(b.data.title);
+  return getSoftwareTitle(
+    a
+  ).localeCompare(
+    getSoftwareTitle(b)
+  );
 });
 
-/**
- * Patents
- */
-const patents = (await getCollection('patents')).sort(
+/* =========================================================
+   Patents
+   ========================================================= */
+
+const patents = (
+  await getCollection('patents')
+).sort(
   (a, b) =>
-    b.data.date.valueOf() - a.data.date.valueOf()
+    b.data.date.valueOf() -
+    a.data.date.valueOf()
 );
 
-/**
- * Honors
- */
-const honors = (await getCollection('honors')).sort(
+/* =========================================================
+   Honors
+   ========================================================= */
+
+const honors = (
+  await getCollection('honors')
+).sort(
   (a, b) =>
-    b.data.date.valueOf() - a.data.date.valueOf()
+    b.data.date.valueOf() -
+    a.data.date.valueOf()
 );
+
+/* =========================================================
+   Sections
+   ========================================================= */
 
 const sections = [
   {
     id: 'papers',
     title: 'Published Papers',
-    key: 'achievements.papers',
+    ko: '논문',
     icon: BookOpen,
     count: papers.length,
   },
+
   {
     id: 'books',
     title: 'Book Chapters',
-    key: 'achievements.books',
+    ko: '저서 및 북챕터',
     icon: Book,
     count: books.length,
   },
+
   {
     id: 'softwares',
     title: 'Research Software',
-    key: 'achievements.softwares',
+    ko: '연구 소프트웨어',
     icon: FileCode,
     count: softwares.length,
   },
+
   {
     id: 'patents',
     title: 'Invention Patents',
-    key: 'achievements.patents',
+    ko: '특허',
     icon: ScrollText,
     count: patents.length,
   },
+
   {
     id: 'honors',
     title: 'Group Honors',
-    key: 'achievements.honors',
+    ko: '수상 실적',
     icon: Award,
     count: honors.length,
   },
 ];
+
+/* =========================================================
+   Software links
+   ========================================================= */
 
 const getApplicationLink = (
   software: (typeof softwares)[number]
@@ -152,19 +383,25 @@ const getApplicationLink = (
   <main
     class="mx-auto max-w-7xl px-4 py-12 sm:py-20"
   >
+    <!-- =====================================================
+         Header
+         ===================================================== -->
+
     <header
       class="mx-auto mb-16 max-w-3xl text-center"
     >
       <h1
         class="mb-4 text-4xl font-bold text-gray-900"
-        data-i18n-key="achievements.title"
+        data-ko="연구 성과"
+        data-en="Research Achievements"
       >
         Research Achievements
       </h1>
 
       <p
         class="text-lg text-gray-600"
-        data-i18n-key="achievements.subtitle"
+        data-ko="MIDAS Lab의 논문, 소프트웨어, 지식재산권 및 주요 수상 실적을 소개합니다."
+        data-en="A comprehensive collection of our academic publications, software, intellectual property, and collective honors."
       >
         A comprehensive collection of our academic
         publications, software, intellectual property,
@@ -172,7 +409,10 @@ const getApplicationLink = (
       </p>
     </header>
 
-    <!-- Navigation pills -->
+    <!-- =====================================================
+         Navigation
+         ===================================================== -->
+
     <nav
       aria-label="Achievement categories"
       class="sticky top-20 z-30 mb-16 flex flex-wrap justify-center gap-4 rounded-2xl border border-gray-100 bg-white/80 p-4 shadow-sm backdrop-blur"
@@ -188,7 +428,10 @@ const getApplicationLink = (
             >
               <Icon className="h-4 w-4" />
 
-              <span data-i18n-key={section.key}>
+              <span
+                data-ko={section.ko}
+                data-en={section.title}
+              >
                 {section.title}
               </span>
 
@@ -204,19 +447,26 @@ const getApplicationLink = (
     </nav>
 
     <div class="space-y-24">
-      <!-- Papers -->
+
+      <!-- ===================================================
+           Papers
+           =================================================== -->
+
       <section
         id="papers"
         class="scroll-mt-40"
       >
-        <div class="mb-8 flex items-center gap-3">
+        <div
+          class="mb-8 flex items-center gap-3"
+        >
           <BookOpen
             className="h-8 w-8 text-blue-600"
           />
 
           <h2
             class="text-3xl font-bold text-gray-900"
-            data-i18n-key="achievements.papers"
+            data-ko="논문"
+            data-en="Published Papers"
           >
             Published Papers
           </h2>
@@ -225,7 +475,9 @@ const getApplicationLink = (
         <div class="grid gap-6">
           {
             papers.map((paper) => (
-              <PublicationItem entry={paper} />
+              <PublicationItem
+                entry={paper}
+              />
             ))
           }
 
@@ -233,7 +485,8 @@ const getApplicationLink = (
             papers.length === 0 && (
               <p
                 class="italic text-gray-500"
-                data-i18n-key="achievements.noPapers"
+                data-ko="등록된 논문이 없습니다."
+                data-en="No papers listed yet."
               >
                 No papers listed yet.
               </p>
@@ -242,17 +495,25 @@ const getApplicationLink = (
         </div>
       </section>
 
-      <!-- Books -->
+      <!-- ===================================================
+           Books
+           =================================================== -->
+
       <section
         id="books"
         class="scroll-mt-40"
       >
-        <div class="mb-8 flex items-center gap-3">
-          <Book className="h-8 w-8 text-blue-600" />
+        <div
+          class="mb-8 flex items-center gap-3"
+        >
+          <Book
+            className="h-8 w-8 text-blue-600"
+          />
 
           <h2
             class="text-3xl font-bold text-gray-900"
-            data-i18n-key="achievements.books"
+            data-ko="저서 및 북챕터"
+            data-en="Book Chapters"
           >
             Book Chapters
           </h2>
@@ -271,7 +532,8 @@ const getApplicationLink = (
             books.length === 0 && (
               <p
                 class="italic text-gray-500"
-                data-i18n-key="achievements.noBooks"
+                data-ko="등록된 저서 또는 북챕터가 없습니다."
+                data-en="No book chapters listed yet."
               >
                 No book chapters listed yet.
               </p>
@@ -280,19 +542,25 @@ const getApplicationLink = (
         </div>
       </section>
 
-      <!-- Software -->
+      <!-- ===================================================
+           Software
+           =================================================== -->
+
       <section
         id="softwares"
         class="scroll-mt-40"
       >
-        <div class="mb-8 flex items-center gap-3">
+        <div
+          class="mb-8 flex items-center gap-3"
+        >
           <FileCode
             className="h-8 w-8 text-blue-600"
           />
 
           <h2
             class="text-3xl font-bold text-gray-900"
-            data-i18n-key="achievements.softwares"
+            data-ko="연구 소프트웨어"
+            data-en="Research Software"
           >
             Research Software
           </h2>
@@ -302,146 +570,251 @@ const getApplicationLink = (
           class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
         >
           {
-            softwares.map((software) => {
-              const softwareYear =
-                getSoftwareYear(software);
+            softwares.map(
+              (software) => {
+                const softwareYear =
+                  getSoftwareYear(
+                    software
+                  );
 
-              const applicationLink =
-                getApplicationLink(software);
+                const applicationLink =
+                  getApplicationLink(
+                    software
+                  );
 
-              return (
-                <article
-                  class="flex h-full flex-col rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
-                >
-                  <div
-                    class="mb-4 flex items-start gap-4"
+                const localizedTitle =
+                  getLocalizedText(
+                    software.data.title
+                  );
+
+                const localizedDescription =
+                  getLocalizedText(
+                    software.data
+                      .description
+                  );
+
+                const localizedDevelopers =
+                  getLocalizedArray(
+                    software.data
+                      .developers
+                  );
+
+                const typeLabel =
+                  typeLabels[
+                    software.data.type
+                  ] ?? {
+                    ko: software.data.type,
+                    en: software.data.type,
+                  };
+
+                const statusLabel =
+                  statusLabels[
+                    software.data.status
+                  ] ?? {
+                    ko:
+                      software.data
+                        .status,
+                    en:
+                      software.data
+                        .status,
+                  };
+
+                return (
+                  <article
+                    class="flex h-full flex-col rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
                   >
                     <div
-                      class="shrink-0 rounded-lg bg-blue-50 p-3 text-blue-600"
+                      class="mb-4 flex items-start gap-4"
                     >
-                      <FileCode className="h-6 w-6" />
-                    </div>
-
-                    <div class="min-w-0">
-                      <p
-                        class="text-sm font-medium text-blue-600"
+                      <div
+                        class="shrink-0 rounded-lg bg-blue-50 p-3 text-blue-600"
                       >
-                        {software.data.type}
-                      </p>
+                        <FileCode
+                          className="h-6 w-6"
+                        />
+                      </div>
 
-                      <h3
-                        class="mt-1 text-lg font-bold text-gray-900"
-                        title={software.data.title}
-                      >
-                        {software.data.title}
-                      </h3>
-                    </div>
-                  </div>
-
-                  <p
-                    class="flex-1 text-sm leading-6 text-gray-600"
-                  >
-                    {software.data.description}
-                  </p>
-
-                  {
-                    software.data.developers &&
-                    software.data.developers.length >
-                      0 && (
-                      <p
-                        class="mt-4 text-sm text-gray-600"
-                      >
-                        <span
-                          class="font-medium text-gray-900"
-                          data-i18n-key="achievements.developers"
+                      <div class="min-w-0">
+                        <p
+                          class="text-sm font-medium text-blue-600"
+                          data-ko={
+                            typeLabel.ko
+                          }
+                          data-en={
+                            typeLabel.en
+                          }
                         >
-                          Developers:
-                        </span>{' '}
-                        {
-                          software.data.developers.join(
-                            ', '
-                          )
-                        }
-                      </p>
-                    )
-                  }
+                          {typeLabel.en}
+                        </p>
 
-                  <div
-                    class="mt-5 flex items-center justify-between gap-3 border-t border-gray-100 pt-4"
-                  >
-                    <span
-                      class="rounded-full bg-gray-50 px-3 py-1 text-xs font-medium text-gray-600"
+                        <h3
+                          class="mt-1 text-lg font-bold text-gray-900"
+                        >
+                          <span
+                            data-ko={
+                              localizedTitle.ko
+                            }
+                            data-en={
+                              localizedTitle.en
+                            }
+                          >
+                            {
+                              localizedTitle.en
+                            }
+                          </span>
+                        </h3>
+                      </div>
+                    </div>
+
+                    <p
+                      class="flex-1 text-sm leading-6 text-gray-600"
+                      data-ko={
+                        localizedDescription.ko
+                      }
+                      data-en={
+                        localizedDescription.en
+                      }
                     >
-                      {software.data.status}
-                    </span>
+                      {
+                        localizedDescription.en
+                      }
+                    </p>
 
                     {
-                      softwareYear > 0 && (
-                        <span
-                          class="text-sm text-gray-400"
+                      software.data
+                        .developers &&
+                      localizedDevelopers.en
+                        .length > 0 && (
+                        <p
+                          class="mt-4 text-sm text-gray-600"
                         >
-                          {softwareYear}
-                        </span>
+                          <span
+                            class="font-medium text-gray-900"
+                            data-ko="개발자:"
+                            data-en="Developers:"
+                          >
+                            Developers:
+                          </span>
+
+                          {' '}
+
+                          <span
+                            data-ko={localizedDevelopers.ko.join(
+                              ', '
+                            )}
+                            data-en={localizedDevelopers.en.join(
+                              ', '
+                            )}
+                          >
+                            {
+                              localizedDevelopers.en.join(
+                                ', '
+                              )
+                            }
+                          </span>
+                        </p>
                       )
                     }
-                  </div>
 
-                  {
-                    (
-                      software.data.links?.github ||
-                      applicationLink
-                    ) && (
-                      <div
-                        class="mt-4 flex flex-wrap gap-3"
+                    <div
+                      class="mt-5 flex items-center justify-between gap-3 border-t border-gray-100 pt-4"
+                    >
+                      <span
+                        class="rounded-full bg-gray-50 px-3 py-1 text-xs font-medium text-gray-600"
+                        data-ko={
+                          statusLabel.ko
+                        }
+                        data-en={
+                          statusLabel.en
+                        }
                       >
-                        {
-                          software.data.links
-                            ?.github && (
-                            <a
-                              href={
-                                software.data.links
-                                  .github
-                              }
-                              target="_blank"
-                              rel="noreferrer"
-                              class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-blue-600"
-                            >
-                              <Github
-                                className="h-4 w-4"
-                              />
-                              GitHub
-                            </a>
-                          )
-                        }
+                        {statusLabel.en}
+                      </span>
 
-                        {
-                          applicationLink && (
-                            <a
-                              href={applicationLink}
-                              target="_blank"
-                              rel="noreferrer"
-                              class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-blue-600"
-                            >
-                              <ExternalLink
-                                className="h-4 w-4"
-                              />
-                              Website
-                            </a>
-                          )
-                        }
-                      </div>
-                    )
-                  }
-                </article>
-              );
-            })
+                      {
+                        softwareYear >
+                          0 && (
+                          <span
+                            class="text-sm text-gray-400"
+                          >
+                            {
+                              softwareYear
+                            }
+                          </span>
+                        )
+                      }
+                    </div>
+
+                    {
+                      (
+                        software.data.links
+                          ?.github ||
+                        applicationLink
+                      ) && (
+                        <div
+                          class="mt-4 flex flex-wrap gap-3"
+                        >
+                          {
+                            software.data
+                              .links
+                              ?.github && (
+                              <a
+                                href={
+                                  software
+                                    .data
+                                    .links
+                                    .github
+                                }
+                                target="_blank"
+                                rel="noreferrer"
+                                class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-blue-600"
+                              >
+                                <Github
+                                  className="h-4 w-4"
+                                />
+                                GitHub
+                              </a>
+                            )
+                          }
+
+                          {
+                            applicationLink && (
+                              <a
+                                href={
+                                  applicationLink
+                                }
+                                target="_blank"
+                                rel="noreferrer"
+                                class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 transition hover:text-blue-600"
+                              >
+                                <ExternalLink
+                                  className="h-4 w-4"
+                                />
+
+                                <span
+                                  data-ko="웹사이트"
+                                  data-en="Website"
+                                >
+                                  Website
+                                </span>
+                              </a>
+                            )
+                          }
+                        </div>
+                      )
+                    }
+                  </article>
+                );
+              }
+            )
           }
 
           {
             softwares.length === 0 && (
               <p
                 class="italic text-gray-500"
-                data-i18n-key="achievements.noSoftwares"
+                data-ko="등록된 연구 소프트웨어가 없습니다."
+                data-en="No research software listed yet."
               >
                 No research software listed yet.
               </p>
@@ -450,19 +823,25 @@ const getApplicationLink = (
         </div>
       </section>
 
-      <!-- Patents -->
+      <!-- ===================================================
+           Patents
+           =================================================== -->
+
       <section
         id="patents"
         class="scroll-mt-40"
       >
-        <div class="mb-8 flex items-center gap-3">
+        <div
+          class="mb-8 flex items-center gap-3"
+        >
           <ScrollText
             className="h-8 w-8 text-blue-600"
           />
 
           <h2
             class="text-3xl font-bold text-gray-900"
-            data-i18n-key="achievements.patents"
+            data-ko="특허"
+            data-en="Invention Patents"
           >
             Invention Patents
           </h2>
@@ -470,112 +849,164 @@ const getApplicationLink = (
 
         <div class="grid gap-6">
           {
-            patents.map((patent) => (
-              <article
-                class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
-              >
-                <div class="flex gap-4">
-                  <div class="shrink-0">
-                    <div
-                      class="rounded-lg bg-amber-50 p-3 text-amber-600"
-                    >
-                      <ScrollText
-                        className="h-6 w-6"
-                      />
-                    </div>
-                  </div>
+            patents.map(
+              (patent) => {
+                const status =
+                  patent.data.status;
 
-                  <div class="flex-grow">
-                    <div
-                      class="mb-2 flex flex-col justify-between gap-2 sm:flex-row sm:items-center"
-                    >
-                      <h3
-                        class="text-lg font-bold text-gray-900"
-                      >
-                        {patent.data.title}
-                      </h3>
-
-                      <span
-                        class:list={[
-                          'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium',
-                          patent.data.status ===
-                            'Granted'
-                            ? 'border-green-200 bg-green-50 text-green-700'
-                            : patent.data.status ===
-                                'Pending'
-                              ? 'border-amber-200 bg-amber-50 text-amber-700'
-                              : 'border-gray-200 bg-gray-50 text-gray-600',
-                        ]}
-                      >
-                        {
-                          patent.data.status ===
-                            'Granted' && (
-                            <CheckCircle
-                              className="h-3 w-3"
-                            />
-                          )
+                const statusLabel =
+                  status === 'Granted'
+                    ? {
+                        ko: '등록',
+                        en: 'Granted',
+                      }
+                    : status ===
+                        'Pending'
+                      ? {
+                          ko: '출원 중',
+                          en: 'Pending',
                         }
+                      : {
+                          ko: '출원',
+                          en: 'Filed',
+                        };
 
-                        {
-                          patent.data.status ===
-                            'Pending' && (
-                            <Clock
-                              className="h-3 w-3"
-                            />
-                          )
-                        }
+                return (
+                  <article
+                    class="rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+                  >
+                    <div class="flex gap-4">
+                      <div class="shrink-0">
+                        <div
+                          class="rounded-lg bg-amber-50 p-3 text-amber-600"
+                        >
+                          <ScrollText
+                            className="h-6 w-6"
+                          />
+                        </div>
+                      </div>
 
-                        {
-                          patent.data.status ===
-                            'Filed' && (
-                            <FileInput
-                              className="h-3 w-3"
-                            />
-                          )
-                        }
+                      <div class="flex-grow">
+                        <div
+                          class="mb-2 flex flex-col justify-between gap-2 sm:flex-row sm:items-center"
+                        >
+                          <h3
+                            class="text-lg font-bold text-gray-900"
+                          >
+                            {
+                              patent
+                                .data
+                                .title
+                            }
+                          </h3>
 
-                        {patent.data.status}
-                      </span>
+                          <span
+                            class:list={[
+                              'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium',
+
+                              status ===
+                              'Granted'
+                                ? 'border-green-200 bg-green-50 text-green-700'
+                                : status ===
+                                    'Pending'
+                                  ? 'border-amber-200 bg-amber-50 text-amber-700'
+                                  : 'border-gray-200 bg-gray-50 text-gray-600',
+                            ]}
+                          >
+                            {
+                              status ===
+                                'Granted' && (
+                                <CheckCircle
+                                  className="h-3 w-3"
+                                />
+                              )
+                            }
+
+                            {
+                              status ===
+                                'Pending' && (
+                                <Clock
+                                  className="h-3 w-3"
+                                />
+                              )
+                            }
+
+                            {
+                              status ===
+                                'Filed' && (
+                                <FileInput
+                                  className="h-3 w-3"
+                                />
+                              )
+                            }
+
+                            <span
+                              data-ko={
+                                statusLabel.ko
+                              }
+                              data-en={
+                                statusLabel.en
+                              }
+                            >
+                              {
+                                statusLabel.en
+                              }
+                            </span>
+                          </span>
+                        </div>
+
+                        <div
+                          class="mb-2 text-sm text-gray-600"
+                        >
+                          <span
+                            class="font-medium text-gray-900"
+                            data-ko="발명자:"
+                            data-en="Inventors:"
+                          >
+                            Inventors:
+                          </span>
+
+                          {' '}
+
+                          {
+                            patent.data.inventors.join(
+                              ', '
+                            )
+                          }
+                        </div>
+
+                        <div
+                          class="flex flex-wrap items-center gap-4 text-sm text-gray-500"
+                        >
+                          <span
+                            class="rounded border border-gray-200 bg-gray-50 px-2 py-0.5 font-mono"
+                          >
+                            {
+                              patent.data
+                                .number
+                            }
+                          </span>
+
+                          <time>
+                            {
+                              patent.data.date.toLocaleDateString()
+                            }
+                          </time>
+                        </div>
+                      </div>
                     </div>
-
-                    <div
-                      class="mb-2 text-sm text-gray-600"
-                    >
-                      <span
-                        class="font-medium text-gray-900"
-                        data-i18n-key="achievements.inventors"
-                      >
-                        Inventors:
-                      </span>{' '}
-                      {patent.data.inventors.join(', ')}
-                    </div>
-
-                    <div
-                      class="flex flex-wrap items-center gap-4 text-sm text-gray-500"
-                    >
-                      <span
-                        class="rounded border border-gray-200 bg-gray-50 px-2 py-0.5 font-mono"
-                      >
-                        {patent.data.number}
-                      </span>
-
-                      <time>
-                        {
-                          patent.data.date.toLocaleDateString()
-                        }
-                      </time>
-                    </div>
-                  </div>
-                </div>
-              </article>
-            ))
+                  </article>
+                );
+              }
+            )
           }
 
           {
             patents.length === 0 && (
               <p
                 class="italic text-gray-500"
-                data-i18n-key="achievements.noPatents"
+                data-ko="등록된 특허가 없습니다."
+                data-en="No patents listed yet."
               >
                 No patents listed yet.
               </p>
@@ -584,19 +1015,25 @@ const getApplicationLink = (
         </div>
       </section>
 
-      <!-- Honors -->
+      <!-- ===================================================
+           Honors
+           =================================================== -->
+
       <section
         id="honors"
         class="scroll-mt-40"
       >
-        <div class="mb-8 flex items-center gap-3">
+        <div
+          class="mb-8 flex items-center gap-3"
+        >
           <Award
             className="h-8 w-8 text-blue-600"
           />
 
           <h2
             class="text-3xl font-bold text-gray-900"
-            data-i18n-key="achievements.honors"
+            data-ko="수상 실적"
+            data-en="Group Honors"
           >
             Group Honors
           </h2>
@@ -606,16 +1043,21 @@ const getApplicationLink = (
           class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
         >
           {
-            honors.map((honor) => (
-              <HonorCard honor={honor} />
-            ))
+            honors.map(
+              (honor) => (
+                <HonorCard
+                  honor={honor}
+                />
+              )
+            )
           }
 
           {
             honors.length === 0 && (
               <p
                 class="italic text-gray-500"
-                data-i18n-key="achievements.noHonors"
+                data-ko="등록된 수상 실적이 없습니다."
+                data-en="No group honors listed yet."
               >
                 No group honors listed yet.
               </p>

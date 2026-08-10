@@ -8,22 +8,34 @@ const allMembers = await getCollection('people');
 const groups = [
   {
     id: 'pi',
-    title: 'Principal Investigator',
+    title: {
+      ko: '연구책임자',
+      en: 'Principal Investigator',
+    },
     roles: ['Principal Investigator'],
   },
   {
     id: 'graduate',
-    title: 'Graduate Students',
+    title: {
+      ko: '대학원생',
+      en: 'Graduate Students',
+    },
     roles: ['PhD Student', 'Master Student'],
   },
   {
     id: 'undergraduate',
-    title: 'Undergraduate Research Interns',
+    title: {
+      ko: '학부연구생',
+      en: 'Undergraduate Research Interns',
+    },
     roles: ['Undergraduate Research Intern', 'Undergraduate'],
   },
   {
     id: 'alumni',
-    title: 'Alumni',
+    title: {
+      ko: '졸업생',
+      en: 'Alumni',
+    },
     roles: ['Alumni'],
   },
 ];
@@ -77,11 +89,15 @@ const groupedMembers = groups
     <header class="mx-auto mb-16 max-w-3xl text-center">
       <h1
         class="mb-4 text-4xl font-bold text-gray-900 dark:text-white"
+        data-i18n-key="people.title"
       >
         Lab Members
       </h1>
 
-      <p class="text-lg text-gray-600 dark:text-gray-300">
+      <p 
+        class="text-lg text-gray-600 dark:text-gray-300"
+        data-i18n-key="people.subtitle"
+      >
         Meet the researchers and students of MIDAS Lab.
       </p>
     </header>
@@ -91,10 +107,15 @@ const groupedMembers = groups
         groupedMembers.map((group) => (
           <section id={group.id}>
             <h2
-              class="mb-10 border-l-4 border-blue-600 pl-4 text-2xl font-bold text-gray-900 dark:text-white"
+              class="mb-10 border-l-4 border-blue-600 pl-4 text-2xl font-bold text-gray-900"
             >
-              {group.title}
-            </h2>
+              <span
+                data-ko={group.title.ko}
+                data-en={group.title.en}
+              >
+                {group.title.en}
+              </span>
+            </h2>            
 
             {
               group.id === 'pi' ? (
@@ -125,7 +146,10 @@ const groupedMembers = groups
 
       {
         allMembers.length === 0 && (
-          <p class="py-12 text-center text-gray-500 dark:text-gray-400">
+          <p
+            class="py-12 text-center text-gray-500"
+            data-i18n-key="people.empty"
+          >
             Member profiles will be added soon.
           </p>
         )

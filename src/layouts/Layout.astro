@@ -4,19 +4,174 @@ import Header from '../components/Header.astro';
 import { SITE } from '../config';
 import { ui, defaultLang } from '../i18n/ui';
 
+/* =========================================================
+   Types
+   ========================================================= */
+
+type LocalizedText = {
+  ko: string;
+  en: string;
+};
+
 interface Props {
-  title?: string;
+  title?: string | LocalizedText;
   description?: string;
 }
 
-const { title, description = SITE.description } = Astro.props;
+const {
+  title,
+  description = SITE.description,
+} = Astro.props;
 
-const pageTitle = title
-  ? `${title} | ${SITE.labName}`
+/* =========================================================
+   Browser title translations
+   ========================================================= */
+
+/*
+ * 페이지에서 <Layout title="Research">처럼
+ * 영문 title만 전달해도 브라우저 탭에서는
+ * 현재 언어에 따라 한글/영문으로 표시할 수 있도록 합니다.
+ *
+ * 개별 논문 제목, Software 이름 등 여기에 없는 문자열은
+ * 한글/영문에서 동일하게 유지됩니다.
+ */
+const pageTitleTranslations: Record<
+  string,
+  LocalizedText
+> = {
+  Home: {
+    ko: '홈',
+    en: 'Home',
+  },
+
+  Research: {
+    ko: '연구분야',
+    en: 'Research',
+  },
+
+  Publications: {
+    ko: '연구실적',
+    en: 'Publications',
+  },
+
+  Software: {
+    ko: '소프트웨어',
+    en: 'Software',
+  },
+
+  People: {
+    ko: '구성원',
+    en: 'People',
+  },
+
+  Team: {
+    ko: '구성원',
+    en: 'Team',
+  },
+
+  News: {
+    ko: '소식',
+    en: 'News',
+  },
+
+  Achievements: {
+    ko: '연구 성과',
+    en: 'Achievements',
+  },
+
+  Activities: {
+    ko: '활동',
+    en: 'Activities',
+  },
+
+  'Join Us': {
+    ko: '연구실 지원',
+    en: 'Join Us',
+  },
+
+  Contact: {
+    ko: '연락처',
+    en: 'Contact',
+  },
+
+  Search: {
+    ko: '검색',
+    en: 'Search',
+  },
+};
+
+/* =========================================================
+   Normalize page title
+   ========================================================= */
+
+function getLocalizedPageTitle(
+  value?: string | LocalizedText
+): LocalizedText | null {
+  if (!value) {
+    return null;
+  }
+
+  /*
+   * 이미 ko/en 객체로 전달된 경우
+   */
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  /*
+   * 일반 페이지 제목인 경우 번역표 사용
+   */
+  if (pageTitleTranslations[value]) {
+    return pageTitleTranslations[value];
+  }
+
+  /*
+   * 논문 제목, Software 이름, 사람 이름 등
+   * 별도 번역 정보가 없는 경우에는
+   * 한글/영문에서 동일하게 사용합니다.
+   */
+  return {
+    ko: value,
+    en: value,
+  };
+}
+
+const localizedTitle =
+  getLocalizedPageTitle(title);
+
+/* =========================================================
+   Final browser titles
+   ========================================================= */
+
+const pageTitleEn = localizedTitle
+  ? `${localizedTitle.en} | ${SITE.labName}`
   : `${SITE.labName} - ${SITE.university}`;
 
-const currentPath = Astro.url.pathname.replace(/^\/|\/$/g, '');
-const ogSlug = currentPath === '' ? 'index' : currentPath;
+const pageTitleKo = localizedTitle
+  ? `${localizedTitle.ko} | ${SITE.labName}`
+  : `${SITE.labName} - ${SITE.university}`;
+
+/*
+ * 서버 렌더링 시 기본 title은 영문으로 생성합니다.
+ * 실제 브라우저에서는 아래 language script가
+ * 저장된 언어에 맞게 document.title을 다시 설정합니다.
+ */
+const pageTitle = pageTitleEn;
+
+/* =========================================================
+   Open Graph
+   ========================================================= */
+
+const currentPath =
+  Astro.url.pathname.replace(
+    /^\/|\/$/g,
+    ''
+  );
+
+const ogSlug =
+  currentPath === ''
+    ? 'index'
+    : currentPath;
 
 const supportedOgPages = [
   'index',
@@ -27,11 +182,15 @@ const supportedOgPages = [
   'join',
 ];
 
-const finalOgSlug = supportedOgPages.includes(ogSlug)
-  ? ogSlug
-  : 'index';
+const finalOgSlug =
+  supportedOgPages.includes(ogSlug)
+    ? ogSlug
+    : 'index';
 
-const ogImage = new URL(`/og/${finalOgSlug}.png`, Astro.url);
+const ogImage = new URL(
+  `/og/${finalOgSlug}.png`,
+  Astro.url
+);
 ---
 
 <!doctype html>
@@ -44,8 +203,15 @@ const ogImage = new URL(`/og/${finalOgSlug}.png`, Astro.url);
       content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-src 'self' https://www.google.com https://maps.google.com;"
     />
 
-    <meta name="description" content={description} />
-    <meta name="viewport" content="width=device-width" />
+    <meta
+      name="description"
+      content={description}
+    />
+
+    <meta
+      name="viewport"
+      content="width=device-width"
+    />
 
     <link
       rel="icon"
@@ -58,9 +224,16 @@ const ogImage = new URL(`/og/${finalOgSlug}.png`, Astro.url);
       content={Astro.generator}
     />
 
+    <!-- =====================================================
+         Browser Tab Title
+         ===================================================== -->
+
     <title>{pageTitle}</title>
 
-    <!-- Open Graph / Facebook -->
+    <!-- =====================================================
+         Open Graph / Facebook
+         ===================================================== -->
+
     <meta
       property="og:type"
       content="website"
@@ -73,7 +246,7 @@ const ogImage = new URL(`/og/${finalOgSlug}.png`, Astro.url);
 
     <meta
       property="og:title"
-      content={pageTitle}
+      content={pageTitleEn}
     />
 
     <meta
@@ -86,7 +259,10 @@ const ogImage = new URL(`/og/${finalOgSlug}.png`, Astro.url);
       content={ogImage}
     />
 
-    <!-- Twitter -->
+    <!-- =====================================================
+         Twitter
+         ===================================================== -->
+
     <meta
       property="twitter:card"
       content="summary_large_image"
@@ -99,7 +275,7 @@ const ogImage = new URL(`/og/${finalOgSlug}.png`, Astro.url);
 
     <meta
       property="twitter:title"
-      content={pageTitle}
+      content={pageTitleEn}
     />
 
     <meta
@@ -112,34 +288,60 @@ const ogImage = new URL(`/og/${finalOgSlug}.png`, Astro.url);
       content={ogImage}
     />
 
+    <!-- =====================================================
+         Structured Data
+         ===================================================== -->
+
     {
       Astro.url.pathname === '/' && (
         <script
           is:inline
           type="application/ld+json"
           set:html={JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'Person',
-            name: SITE.author,
-            url: SITE.website,
-            image: new URL(
-              SITE.avatar || SITE.logo,
-              SITE.website
-            ).href,
-            jobTitle: 'Principal Investigator',
+            '@context':
+              'https://schema.org',
+
+            '@type':
+              'Person',
+
+            name:
+              SITE.author,
+
+            url:
+              SITE.website,
+
+            image:
+              new URL(
+                SITE.avatar ||
+                  SITE.logo,
+                SITE.website
+              ).href,
+
+            jobTitle:
+              'Principal Investigator',
+
             worksFor: {
-              '@type': 'Organization',
-              name: SITE.labName,
-              url: SITE.website,
+              '@type':
+                'Organization',
+
+              name:
+                SITE.labName,
+
+              url:
+                SITE.website,
             },
-            description: SITE.description,
+
+            description:
+              SITE.description,
           })}
         />
       )
     }
   </head>
 
-  <body class="flex min-h-screen flex-col">
+  <body
+    class="flex min-h-screen flex-col"
+  >
     <Header />
 
     <main
@@ -149,8 +351,16 @@ const ogImage = new URL(`/og/${finalOgSlug}.png`, Astro.url);
       <slot />
     </main>
 
-    <footer class="mt-12 border-t border-gray-100 bg-gray-50 py-8">
-      <div class="mx-auto max-w-7xl px-4 text-center text-sm text-gray-500">
+    <!-- =====================================================
+         Footer
+         ===================================================== -->
+
+    <footer
+      class="mt-12 border-t border-gray-100 bg-gray-50 py-8"
+    >
+      <div
+        class="mx-auto max-w-7xl px-4 text-center text-sm text-gray-500"
+      >
         <p>
           <a
             href="https://github.com/fjd2004711/scholar-lite"
@@ -164,17 +374,35 @@ const ogImage = new URL(`/og/${finalOgSlug}.png`, Astro.url);
       </div>
     </footer>
 
+    <!-- =====================================================
+         Language Switching
+         ===================================================== -->
+
     <script
       is:inline
-      define:vars={{ ui, defaultLang }}
+      define:vars={{
+        ui,
+        defaultLang,
+        pageTitleKo,
+        pageTitleEn,
+      }}
     >
       const translations = ui;
       const fallbackLang = defaultLang;
 
+      /* -----------------------------------------------------
+         Stored language
+         ----------------------------------------------------- */
+
       function getStoredLang() {
-        if (typeof localStorage !== 'undefined') {
+        if (
+          typeof localStorage !==
+          'undefined'
+        ) {
           return (
-            localStorage.getItem('preferred-lang') ||
+            localStorage.getItem(
+              'preferred-lang'
+            ) ||
             fallbackLang
           );
         }
@@ -182,44 +410,171 @@ const ogImage = new URL(`/og/${finalOgSlug}.png`, Astro.url);
         return fallbackLang;
       }
 
-      window.setLanguage = (lang) => {
-        localStorage.setItem('preferred-lang', lang);
-        document.documentElement.lang = lang;
+      /* -----------------------------------------------------
+         Browser title
+         ----------------------------------------------------- */
 
+      function updateDocumentTitle(
+        lang
+      ) {
+        document.title =
+          lang === 'ko'
+            ? pageTitleKo
+            : pageTitleEn;
+      }
+
+      /* -----------------------------------------------------
+         Set language
+         ----------------------------------------------------- */
+
+      window.setLanguage = (
+        lang
+      ) => {
+        localStorage.setItem(
+          'preferred-lang',
+          lang
+        );
+
+        document.documentElement.lang =
+          lang;
+
+        /*
+         * Browser tab title
+         */
+        updateDocumentTitle(lang);
+
+        /*
+         * ui.ts 기반 번역
+         */
         const elements =
-          document.querySelectorAll('[data-i18n-key]');
+          document.querySelectorAll(
+            '[data-i18n-key]'
+          );
 
-        elements.forEach((el) => {
-          const key =
-            el.getAttribute('data-i18n-key');
+        /*
+         * data-ko / data-en 기반 번역
+         */
+        const contentElements =
+          document.querySelectorAll(
+            '[data-ko][data-en]'
+          );
 
-          if (
-            key &&
-            translations[lang] &&
-            translations[lang][key]
-          ) {
-            if (
-              el.tagName === 'INPUT' ||
-              el.tagName === 'TEXTAREA'
-            ) {
-              el.placeholder =
-                translations[lang][key];
-            } else {
+        /*
+         * Markdown language blocks
+         */
+        const langBlocks =
+          document.querySelectorAll(
+            '[data-content-lang]'
+          );
+
+        /* ---------------------------------------------------
+           Markdown blocks
+           --------------------------------------------------- */
+
+        langBlocks.forEach(
+          (el) => {
+            el.style.display =
+              el.dataset
+                .contentLang ===
+              lang
+                ? ''
+                : 'none';
+          }
+        );
+
+        /* ---------------------------------------------------
+           data-ko / data-en
+           --------------------------------------------------- */
+
+        contentElements.forEach(
+          (el) => {
+            const value =
+              el.dataset[lang];
+
+            if (value) {
               el.textContent =
-                translations[lang][key];
+                value;
             }
           }
-        });
+        );
+
+        /* ---------------------------------------------------
+           data-i18n-key
+           --------------------------------------------------- */
+
+        elements.forEach(
+          (el) => {
+            const key =
+              el.getAttribute(
+                'data-i18n-key'
+              );
+
+            if (
+              key &&
+              translations[lang] &&
+              translations[lang][key]
+            ) {
+              if (
+                el.tagName ===
+                  'INPUT' ||
+                el.tagName ===
+                  'TEXTAREA'
+              ) {
+                el.placeholder =
+                  translations[
+                    lang
+                  ][key];
+              } else {
+                el.textContent =
+                  translations[
+                    lang
+                  ][key];
+              }
+            }
+          }
+        );
+
+        /* ---------------------------------------------------
+           Notify other components
+           --------------------------------------------------- */
 
         window.dispatchEvent(
-          new CustomEvent('language-change', {
-            detail: { lang },
-          })
+          new CustomEvent(
+            'language-change',
+            {
+              detail: {
+                lang,
+              },
+            }
+          )
         );
       };
 
-      const currentLang = getStoredLang();
-      window.setLanguage(currentLang);
+      /* -----------------------------------------------------
+         Apply stored language
+         ----------------------------------------------------- */
+
+      function applyStoredLanguage() {
+        const currentLang =
+          getStoredLang();
+
+        window.setLanguage(
+          currentLang
+        );
+      }
+
+      /*
+       * Initial page load
+       */
+      applyStoredLanguage();
+
+      /*
+       * Astro page transition
+       */
+      document.addEventListener(
+        'astro:page-load',
+        applyStoredLanguage
+      );
     </script>
   </body>
 </html>

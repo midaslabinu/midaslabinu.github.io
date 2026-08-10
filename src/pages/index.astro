@@ -47,23 +47,38 @@ const formatNewsDate = (date: Date) =>
 
 const researchAreas = [
   {
-    title: 'Bioinformatics',
-    description:
-      'Computational and AI-driven methods for biological data, including single-cell omics, network biology, sequence analysis, and drug discovery.',
+    title: {
+      ko: '생물정보학',
+      en: 'Bioinformatics',
+    },
+    description: {
+      ko: '단일세포 오믹스, 네트워크 생물학, 염기서열 분석, 단백질 구조 분석 및 AI 기반 신약개발을 위한 계산 알고리즘과 인공지능 방법론을 연구합니다.',
+      en: 'We develop computational algorithms and AI methods for single-cell omics, network biology, sequence analysis, protein structure analysis, and AI-driven drug discovery.',
+    },
     icon: Dna,
     href: '/research#bioinformatics',
   },
   {
-    title: 'Healthcare AI',
-    description:
-      'Artificial intelligence for analyzing voice, cardiovascular, respiratory, gait, and other biomedical data.',
+    title: {
+      ko: '헬스케어 AI',
+      en: 'Healthcare AI',
+    },
+    description: {
+      ko: '음성, 심전도, 심박, 호흡, 보행 등 다양한 생체신호와 의료 데이터를 활용한 인공지능 기반 질환 진단 및 헬스케어 기술을 연구합니다.',
+      en: 'We develop AI-based technologies for disease diagnosis and healthcare applications using biosignals and medical data, including voice, ECG, heart rate, respiration, and gait.',
+    },
     icon: Activity,
     href: '/research#healthcare-ai',
   },
   {
-    title: 'AI for Science & Engineering',
-    description:
-      'AI and data-driven methods for diverse scientific and engineering problems, including time-series modeling and interdisciplinary research.',
+    title: {
+      ko: '과학 및 공학을 위한 인공지능',
+      en: 'AI for Science & Engineering',
+    },
+    description: {
+      ko: '다양한 과학 및 공학 분야의 난제 해결과 과학기술 발전에 기여하기 위한 인공지능 및 데이터 기반 계산 방법론을 연구합니다.',
+      en: 'We develop AI and data-driven computational methods to address challenging problems across science and engineering and contribute to advances in science and technology.',
+    },
     icon: Share2,
     href: '/research#ai-for-science-engineering',
   },
@@ -120,13 +135,15 @@ const researchAreas = [
     >
       <div class="max-w-3xl">
         <h1
-          class="mb-6 text-5xl font-extrabold leading-tight text-white drop-shadow-lg sm:text-6xl md:text-7xl"
+          class="mb-6 text-5xl font-extrabold leading-tight text-white drop-shadow-lg sm:text-6xl md:text-7xl"  
+          data-i18n-key="hero.title"
         >
           {SITE.hero.title}
         </h1>
 
         <p
-          class="mt-4 text-xl leading-relaxed text-gray-300 drop-shadow-md sm:max-w-2xl md:text-2xl"
+          class="mt-4 text-xl leading-relaxed text-gray-300 drop-shadow-md sm:max-w-2xl md:text-2xl"  
+          data-i18n-key="hero.subtitle"
         >
           {SITE.hero.subtitle}
         </p>
@@ -134,14 +151,16 @@ const researchAreas = [
         <div class="mt-10 flex flex-wrap gap-4">
           <a
             href="/research"
-            class="flex items-center justify-center rounded-full border border-transparent bg-white px-8 py-4 text-lg font-medium text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300 hover:bg-gray-100 hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]"
+            class="flex items-center justify-center rounded-full border border-transparent bg-white px-8 py-4 text-lg font-medium text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300 hover:bg-gray-100 hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]"  
+            data-i18n-key="hero.exploreResearch"
           >
             Explore Research
           </a>
 
           <a
             href="#join"
-            class="flex items-center justify-center rounded-full border-2 border-white/30 px-8 py-4 text-lg font-medium text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/10"
+            class="flex items-center justify-center rounded-full border-2 border-white/30 px-8 py-4 text-lg font-medium text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/10"  
+            data-i18n-key="hero.joinLab"
           >
             Join MIDAS Lab
           </a>
@@ -183,21 +202,25 @@ const researchAreas = [
         <div>
           <h2
             class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
+            data-i18n-key="home.news.title"
           >
             Latest News
           </h2>
 
-          <p class="mt-3 text-base text-gray-500">
+          <p class="mt-3 text-base text-gray-500"
+            data-i18n-key="home.news.subtitle"
+          >
             Recent publications, awards, research projects,
             and lab updates.
           </p>
         </div>
-
         <a
           href="/news"
           class="hidden items-center gap-1 font-medium text-blue-600 transition-colors hover:text-blue-700 sm:flex"
         >
-          View all
+          <span data-i18n-key="home.news.viewAll">
+            View all
+          </span>
           <ArrowRight className="h-4 w-4" />
         </a>
       </div>
@@ -234,10 +257,20 @@ const researchAreas = [
                           href={newsUrl}
                           class="transition-colors hover:text-blue-600"
                         >
-                          {entry.data.title}
+                        <span
+                          data-ko={entry.data.title.ko}
+                          data-en={entry.data.title.en}
+                        >
+                          {entry.data.title.en}
+                        </span>
                         </a>
                       ) : (
-                        entry.data.title
+                        <span
+                            data-ko={entry.data.title.ko}
+                            data-en={entry.data.title.en}
+                          >
+                            {entry.data.title.en}
+                          </span>
                       )
                     }
                   </h3>
@@ -245,18 +278,26 @@ const researchAreas = [
                   <p
                     class="mt-2 text-base leading-7 text-gray-600"
                   >
-                    {entry.data.summary}
+                    <span
+                      data-ko={entry.data.summary.ko}
+                      data-en={entry.data.summary.en}
+                    >
+                      {entry.data.summary.en}
+                    </span>
+
                   </p>
 
                   {
                     entry.data.readMore && (
                       <a
                         href={newsUrl}
-                        aria-label={`Read more about ${entry.data.title}`}
+                        aria-label={`Read more about ${entry.data.title.en}`}
                         class="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700"
                       >
-                        Read more
-                        <ArrowRight className="h-4 w-4" />
+                        <span data-i18n-key="home.news.readMore">
+                          Read more
+                        </span>
+                        <ArrowRight className="h-4 w-4" />                                                
                       </a>
                     )
                   }
@@ -267,6 +308,7 @@ const researchAreas = [
         ) : (
           <div
             class="rounded-2xl border border-gray-100 bg-gray-50 px-6 py-12 text-center text-gray-500"
+            data-i18n-key="home.news.empty"
           >
             No news has been posted yet.
           </div>
@@ -278,7 +320,9 @@ const researchAreas = [
           href="/news"
           class="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700"
         >
-          View all
+          <span data-i18n-key="home.news.viewAll">
+            View all
+          </span>
           <ArrowRight className="h-4 w-4" />
         </a>
       </div>
@@ -286,8 +330,8 @@ const researchAreas = [
   </section>
 
   <!-- =====================================================
-       Research Areas
-       ===================================================== -->
+      Research Areas
+      ===================================================== -->
   <section
     id="research-areas"
     class="scroll-mt-24 bg-gray-50 py-16 sm:py-20"
@@ -295,32 +339,40 @@ const researchAreas = [
     <div
       class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
     >
-      <div
-        class="mb-10 flex items-end justify-between gap-4"
-      >
-        <div class="max-w-3xl">
+      <div class="mb-10">
+        <div class="w-full">
           <h2
             class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
+            data-i18n-key="home.research.title"
           >
             Research Areas
           </h2>
+          <p
+            class="mt-3 text-lg leading-7 text-gray-600"
+            data-i18n-key="home.research.subtitle1"
+          >
+            MIDAS Lab develops AI...
+          </p>
 
           <p
-            class="mt-3 text-base leading-7 text-gray-600"
+            class="mt-2 text-lg leading-7 text-gray-600"
+            data-i18n-key="home.research.subtitle2"
           >
-            We develop computational and AI-driven methods
-            for biological, biomedical, scientific, and
-            engineering data.
+            We develop innovative AI...
           </p>
-        </div>
+          
 
-        <a
-          href="/research"
-          class="hidden items-center gap-1 font-medium text-blue-600 transition-colors hover:text-blue-700 sm:flex"
-        >
-          Explore research
-          <ArrowRight className="h-4 w-4" />
-        </a>
+          <a
+            href="/research"
+            class="mt-5 inline-flex items-center gap-1 font-medium text-blue-600 transition-colors hover:text-blue-700"
+          >
+            <span data-i18n-key="home.research.explore">
+              Explore research
+            </span>
+
+            <ArrowRight className="h-4 w-4" />
+          </a>
+        </div>
       </div>
 
       <div
@@ -333,7 +385,7 @@ const researchAreas = [
             return (
               <a
                 href={area.href}
-                aria-label={`Learn more about ${area.title}`}
+                aria-label={`Learn more about ${area.title.en}`}
                 class="group flex h-full flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-100 hover:shadow-md"
               >
                 <div
@@ -345,19 +397,31 @@ const researchAreas = [
                 <h3
                   class="mt-5 min-h-[3.5rem] text-xl font-semibold leading-tight text-gray-900 transition-colors group-hover:text-blue-600"
                 >
-                  {area.title}
+                  <span
+                    data-ko={area.title.ko}
+                    data-en={area.title.en}
+                  >
+                    {area.title.en}
+                  </span>
                 </h3>
 
                 <p
                   class="mt-3 text-sm leading-6 text-gray-600"
                 >
-                  {area.description}
+                  <span
+                    data-ko={area.description.ko}
+                    data-en={area.description.en}
+                  >
+                    {area.description.en}
+                  </span>
                 </p>
 
                 <span
                   class="mt-auto inline-flex items-center gap-1 pt-5 text-sm font-semibold text-blue-600"
                 >
-                  Learn more
+                  <span data-i18n-key="home.research.learnMore">
+                    Learn more
+                  </span>
 
                   <ArrowRight
                     className="h-4 w-4 transition-transform group-hover:translate-x-1"
@@ -367,16 +431,6 @@ const researchAreas = [
             );
           })
         }
-      </div>
-
-      <div class="mt-8 sm:hidden">
-        <a
-          href="/research"
-          class="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-700"
-        >
-          Explore research
-          <ArrowRight className="h-4 w-4" />
-        </a>
       </div>
     </div>
   </section>
@@ -406,12 +460,14 @@ const researchAreas = [
 
             <h2
               class="mt-6 text-3xl font-bold tracking-tight sm:text-4xl"
+              data-i18n-key="join.title"
             >
               Join MIDAS Lab
             </h2>
 
             <p
               class="mt-4 text-lg leading-8 text-gray-300"
+              data-i18n-key="join.description"
             >
               We welcome inquiries from graduate students and
               undergraduate researchers interested in
@@ -421,12 +477,14 @@ const researchAreas = [
 
             <div
               class="mt-6 inline-flex items-center rounded-full border border-gray-600 bg-white/5 px-4 py-2 text-sm font-medium text-gray-300"
+              data-i18n-key="join.availability"
             >
               Please contact us for current availability.
             </div>
 
             <p
               class="mt-5 leading-7 text-gray-400"
+              data-i18n-key="join.detail"
             >
               Students from biomedical engineering, computer
               science, artificial intelligence, and related
@@ -442,14 +500,18 @@ const researchAreas = [
               class="inline-flex min-w-[190px] items-center justify-center gap-2 rounded-full bg-white px-6 py-3.5 font-semibold text-gray-900 transition-colors hover:bg-gray-100"
             >
               <Mail className="h-5 w-5" />
-              Contact Us
+              <span data-i18n-key="join.contact">
+                Contact Us
+              </span>              
             </a>
 
             <a
               href="/people"
               class="inline-flex min-w-[190px] items-center justify-center gap-2 rounded-full border border-white/30 px-6 py-3.5 font-semibold text-white transition-colors hover:bg-white/10"
             >
-              Meet the Team
+              <span data-i18n-key="join.team">
+                Meet the Team
+              </span>
               <ArrowRight className="h-4 w-4" />
             </a>
           </div>

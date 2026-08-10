@@ -30,7 +30,128 @@ const {
   correspondingAuthors = [],
 } = entry.data;
 
-const highlightedAuthor = 'Hyundoo Jeong';
+/* =========================================================
+   Multilingual helper
+   ========================================================= */
+
+type LocalizedText =
+  | string
+  | {
+      ko: string;
+      en: string;
+    };
+
+const getLocalizedText = (
+  value?: LocalizedText
+) => {
+  if (!value) {
+    return {
+      ko: '',
+      en: '',
+    };
+  }
+
+  if (typeof value === 'string') {
+    return {
+      ko: value,
+      en: value,
+    };
+  }
+
+  return {
+    ko: value.ko,
+    en: value.en,
+  };
+};
+
+/* =========================================================
+   Multilingual author helper
+   ========================================================= */
+
+type LocalizedAuthors =
+  | string[]
+  | {
+      ko: string[];
+      en: string[];
+    };
+
+const getLocalizedAuthors = (
+  value: LocalizedAuthors
+) => {
+  if (Array.isArray(value)) {
+    return {
+      ko: value,
+      en: value,
+    };
+  }
+
+  return {
+    ko: value.ko,
+    en: value.en,
+  };
+};
+
+/* =========================================================
+   Multilingual fields
+   ========================================================= */
+
+const localizedTitle =
+  getLocalizedText(title);
+
+const localizedVenue =
+  getLocalizedText(venue);
+
+const localizedAward =
+  getLocalizedText(award);
+
+const localizedAuthors =
+  getLocalizedAuthors(authors);
+
+/* =========================================================
+   Highlighted author
+   ========================================================= */
+
+/*
+ * 연구실 PI 이름은 한글/영문 모두 강조합니다.
+ */
+const highlightedAuthors = [
+  'Hyundoo Jeong',
+  '정현두',
+];
+
+const isHighlightedAuthor = (
+  koAuthor: string,
+  enAuthor: string
+) =>
+  highlightedAuthors.includes(koAuthor) ||
+  highlightedAuthors.includes(enAuthor);
+
+/* =========================================================
+   Author contribution helper
+   ========================================================= */
+
+/*
+ * equalContributionAuthors와 correspondingAuthors는
+ * 기존 Markdown과의 호환성을 위해 영문 이름 기준으로
+ * 관리합니다.
+ *
+ * 한글/영문 authors의 순서가 동일하다는 것을 전제로
+ * 해당 저자의 영문 이름을 이용해 contribution 여부를
+ * 판단합니다.
+ */
+const isEqualContributor = (
+  enAuthor: string
+) =>
+  equalContributionAuthors.includes(enAuthor);
+
+const isCorrespondingAuthor = (
+  enAuthor: string
+) =>
+  correspondingAuthors.includes(enAuthor);
+
+/* =========================================================
+   Link icons and labels
+   ========================================================= */
 
 const iconMap: Record<string, any> = {
   view: ExternalLink,
@@ -44,16 +165,49 @@ const iconMap: Record<string, any> = {
   video: Video,
 };
 
-const labelMap: Record<string, string> = {
-  view: 'View',
-  pdf: 'PDF',
-  project: 'Project',
-  website: 'Website',
-  code: 'Code',
-  github: 'Code',
-  demo: 'Demo',
-  slides: 'Slides',
-  video: 'Video',
+const labelMap: Record<
+  string,
+  {
+    ko: string;
+    en: string;
+  }
+> = {
+  view: {
+    ko: '보기',
+    en: 'View',
+  },
+  pdf: {
+    ko: 'PDF',
+    en: 'PDF',
+  },
+  project: {
+    ko: '프로젝트',
+    en: 'Project',
+  },
+  website: {
+    ko: '웹사이트',
+    en: 'Website',
+  },
+  code: {
+    ko: '코드',
+    en: 'Code',
+  },
+  github: {
+    ko: '코드',
+    en: 'Code',
+  },
+  demo: {
+    ko: '데모',
+    en: 'Demo',
+  },
+  slides: {
+    ko: '발표자료',
+    en: 'Slides',
+  },
+  video: {
+    ko: '영상',
+    en: 'Video',
+  },
 };
 
 const linkOrder = [
@@ -71,21 +225,34 @@ const linkOrder = [
 const badgeStyles: Record<string, string> = {
   gold:
     'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-700 border-amber-200 shadow-sm',
+
   blue:
     'bg-blue-50 text-blue-700 border-blue-100',
+
   red:
     'bg-rose-50 text-rose-700 border-rose-100',
+
   green:
     'bg-emerald-50 text-emerald-700 border-emerald-100',
+
   default:
     'bg-gray-50 text-gray-700 border-gray-200',
 };
 
+/* =========================================================
+   Link helpers
+   ========================================================= */
+
 const isValidLink = (url?: string) =>
-  Boolean(url && url.trim() !== '' && url !== '#');
+  Boolean(
+    url &&
+    url.trim() !== '' &&
+    url !== '#'
+  );
 
 /*
  * 제목 링크 우선순위
+ *
  * 1. 공식 상세 페이지
  * 2. 일반 웹사이트
  * 3. 프로젝트 페이지
@@ -102,13 +269,15 @@ const primaryLink = isValidLink(links?.view)
         : undefined;
 
 /*
- * 값이 있는 링크만 선택하고,
+ * 값이 있는 링크만 선택하고
  * linkOrder에 정의된 순서대로 표시합니다.
  */
 const visibleLinks = links
   ? linkOrder
       .filter((key) => {
-        const url = links[key as keyof typeof links];
+        const url =
+          links[key as keyof typeof links];
+
         return isValidLink(url);
       })
       .map((key) => [
@@ -117,6 +286,10 @@ const visibleLinks = links
       ] as const)
   : [];
 
+/* =========================================================
+   Contribution flags
+   ========================================================= */
+
 const hasEqualContributors =
   equalContributionAuthors.length > 0;
 
@@ -124,8 +297,13 @@ const hasCorrespondingAuthors =
   correspondingAuthors.length > 0;
 ---
 
-<article class="group border-b border-gray-100 py-8 last:border-b-0">
-  <!-- Title -->
+<article
+  class="group border-b border-gray-100 py-8 last:border-b-0"
+>
+  <!-- =====================================================
+       Title
+       ===================================================== -->
+
   <h3
     class="text-lg font-semibold leading-snug text-gray-900 transition-colors group-hover:text-blue-600"
   >
@@ -136,43 +314,71 @@ const hasCorrespondingAuthors =
           target="_blank"
           rel="noopener noreferrer"
         >
-          {title}
+          <span
+            data-ko={localizedTitle.ko}
+            data-en={localizedTitle.en}
+          >
+            {localizedTitle.en}
+          </span>
         </a>
       ) : (
-        title
+        <span
+          data-ko={localizedTitle.ko}
+          data-en={localizedTitle.en}
+        >
+          {localizedTitle.en}
+        </span>
       )
     }
   </h3>
 
-  <!-- Authors -->
+  <!-- =====================================================
+       Authors
+       ===================================================== -->
+
   <div class="mt-3">
     <p class="text-sm leading-7 text-gray-600">
       {
-        authors.map((author, index) => {
-          const isHighlighted =
-            author === highlightedAuthor;
+        localizedAuthors.en.map(
+          (enAuthor, index) => {
+            /*
+             * 한글 저자명이 존재하지 않는 경우
+             * 영문 이름을 fallback으로 사용합니다.
+             */
+            const koAuthor =
+              localizedAuthors.ko[index] ??
+              enAuthor;
 
-          const isEqualContributor =
-            equalContributionAuthors.includes(author);
+            const highlighted =
+              isHighlightedAuthor(
+                koAuthor,
+                enAuthor
+              );
 
-          const isCorrespondingAuthor =
-            correspondingAuthors.includes(author);
+            const equalContributor =
+              isEqualContributor(enAuthor);
 
-          return (
-            <>
-              {index > 0 && ', '}
+            const correspondingAuthor =
+              isCorrespondingAuthor(enAuthor);
 
-              <span
-                class={
-                  isHighlighted
-                    ? 'font-semibold text-gray-900'
-                    : ''
-                }
-              >
-                {author}
+            return (
+              <>
+                {index > 0 && ', '}
+
+                <span
+                  class={
+                    highlighted
+                      ? 'font-semibold text-gray-900'
+                      : ''
+                  }
+                  data-ko={koAuthor}
+                  data-en={enAuthor}
+                >
+                  {enAuthor}
+                </span>
 
                 {
-                  isEqualContributor && (
+                  equalContributor && (
                     <sup
                       class="ml-0.5 text-[0.7em] font-semibold text-gray-500"
                       aria-label="Equal contribution"
@@ -183,7 +389,7 @@ const hasCorrespondingAuthors =
                 }
 
                 {
-                  isCorrespondingAuthor && (
+                  correspondingAuthor && (
                     <sup
                       class="ml-0.5 text-[0.7em] font-semibold text-gray-500"
                       aria-label="Corresponding author"
@@ -192,23 +398,39 @@ const hasCorrespondingAuthors =
                     </sup>
                   )
                 }
-              </span>
-            </>
-          );
-        })
+              </>
+            );
+          }
+        )
       }
     </p>
 
-    <!-- Author contribution notes -->
+    <!-- ===================================================
+         Author contribution notes
+         =================================================== -->
+
     {
-      (hasEqualContributors || hasCorrespondingAuthors) && (
-        <div class="mt-1 space-y-0.5 text-xs leading-5 text-gray-400">
+      (
+        hasEqualContributors ||
+        hasCorrespondingAuthors
+      ) && (
+        <div
+          class="mt-1 space-y-0.5 text-xs leading-5 text-gray-400"
+        >
           {
             hasEqualContributors && (
               <p>
-                <span class="font-medium">†</span>
+                <span class="font-medium">
+                  †
+                </span>
                 {' '}
-                These authors contributed equally.
+
+                <span
+                  data-ko="공동 제1저자"
+                  data-en="These authors contributed equally."
+                >
+                  These authors contributed equally.
+                </span>
               </p>
             )
           }
@@ -216,12 +438,28 @@ const hasCorrespondingAuthors =
           {
             hasCorrespondingAuthors && (
               <p>
-                <span class="font-medium">*</span>
+                <span class="font-medium">
+                  *
+                </span>
                 {' '}
+
                 {
-                  correspondingAuthors.length > 1
-                    ? 'Co-corresponding authors.'
-                    : 'Corresponding author.'
+                  correspondingAuthors.length >
+                  1 ? (
+                    <span
+                      data-ko="공동 교신저자"
+                      data-en="Co-corresponding authors."
+                    >
+                      Co-corresponding authors.
+                    </span>
+                  ) : (
+                    <span
+                      data-ko="교신저자"
+                      data-en="Corresponding author."
+                    >
+                      Corresponding author.
+                    </span>
+                  )
                 }
               </p>
             )
@@ -231,12 +469,21 @@ const hasCorrespondingAuthors =
     }
   </div>
 
-  <!-- Venue, year, and badges -->
-  <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+  <!-- =====================================================
+       Venue, Year, and Badges
+       ===================================================== -->
+
+  <div
+    class="mt-2 flex flex-wrap items-center gap-2 text-sm text-gray-500"
+  >
     {
       venue && (
-        <span class="font-medium text-gray-800">
-          {venue}
+        <span
+          class="font-medium text-gray-800"
+          data-ko={localizedVenue.ko}
+          data-en={localizedVenue.en}
+        >
+          {localizedVenue.en}
         </span>
       )
     }
@@ -251,65 +498,111 @@ const hasCorrespondingAuthors =
 
     <span>{year}</span>
 
-    <!-- Legacy award -->
+    <!-- ===================================================
+         Legacy award
+         =================================================== -->
+
     {
       award && !badges && (
         <span
           class="flex items-center gap-1 rounded-full border border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 px-2 py-0.5 text-xs font-medium text-amber-700 shadow-sm"
         >
           <Sparkles className="h-3 w-3" />
-          {award}
+
+          <span
+            data-ko={localizedAward.ko}
+            data-en={localizedAward.en}
+          >
+            {localizedAward.en}
+          </span>
         </span>
       )
     }
 
-    <!-- Badges -->
+    <!-- ===================================================
+         Badges
+         =================================================== -->
+
     {
       badges &&
-        badges.map((badge) => (
-          <span
-            class={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${
-              badgeStyles[badge.type] ||
-              badgeStyles.default
-            }`}
-          >
-            {
-              badge.type === 'gold' && (
-                <Sparkles className="h-3 w-3" />
-              )
-            }
+        badges.map((badge) => {
+          const localizedBadge =
+            getLocalizedText(badge.text);
 
-            {badge.text}
-          </span>
-        ))
+          return (
+            <span
+              class={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${
+                badgeStyles[badge.type] ||
+                badgeStyles.default
+              }`}
+            >
+              {
+                badge.type === 'gold' && (
+                  <Sparkles className="h-3 w-3" />
+                )
+              }
+
+              <span
+                data-ko={localizedBadge.ko}
+                data-en={localizedBadge.en}
+              >
+                {localizedBadge.en}
+              </span>
+            </span>
+          );
+        })
     }
   </div>
 
-  <!-- Links -->
+  <!-- =====================================================
+       Links
+       ===================================================== -->
+
   {
     visibleLinks.length > 0 && (
       <div class="mt-4 flex flex-wrap gap-2">
-        {visibleLinks.map(([key, url]) => {
-          const Icon =
-            iconMap[key] || ExternalLink;
+        {
+          visibleLinks.map(
+            ([key, url]) => {
+              const Icon =
+                iconMap[key] ||
+                ExternalLink;
 
-          const label =
-            labelMap[key] ||
-            key.charAt(0).toUpperCase() +
-              key.slice(1);
+              const labels =
+                labelMap[key] || {
+                  ko:
+                    key
+                      .charAt(0)
+                      .toUpperCase() +
+                    key.slice(1),
 
-          return (
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-all hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
-            >
-              <Icon className="h-3.5 w-3.5" />
-              {label}
-            </a>
-          );
-        })}
+                  en:
+                    key
+                      .charAt(0)
+                      .toUpperCase() +
+                    key.slice(1),
+                };
+
+              return (
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-all hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                >
+                  <Icon className="h-3.5 w-3.5" />
+
+                  <span
+                    data-ko={labels.ko}
+                    data-en={labels.en}
+                  >
+                    {labels.en}
+                  </span>
+                </a>
+              );
+            }
+          )
+        }
       </div>
     )
   }
