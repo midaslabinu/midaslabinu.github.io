@@ -42,7 +42,7 @@ His research focuses on computational methods for bioinformatics, network biolog
 
 - **Ph.D. in Electrical and Computer Engineering**, Texas A&M University, College Station, USA, 2017
 - **M.S. in Electrical Engineering and Computer Science**, Seoul National University, Seoul, Republic of Korea, 2009
-- **B.S. in Electronic and Electrical Engineering, Summa Cum Laude**, Inha University, Incheon, Republic of Korea, 2007
+- **B.S. in Electronic and Electrical Engineering**, Inha University, Incheon, Republic of Korea, 2007
 
 ## Professional Experience
 
@@ -74,7 +74,6 @@ His research focuses on computational methods for bioinformatics, network biolog
 - Outstanding Research Award, Incheon National University (2020)
 - Young Scholar Research Award, Korean Institute of Intelligent Systems (2018)
 - Samsung Education Scholarship (2008)
-- Summa Cum Laude, Inha University (Top 1% of Graduating Class, 2007)
 
 </div>
 
@@ -88,7 +87,7 @@ His research focuses on computational methods for bioinformatics, network biolog
 
 - **텍사스 A&M 대학교 전기컴퓨터공학 박사**, 2017
 - **서울대학교 전기·컴퓨터공학부 석사**, 2009
-- **인하대학교 전자전기공학부 학사(최우등 졸업)**, 2007
+- **인하대학교 전자전기공학부 학사**, 2007
 
 ## 경력
 
@@ -120,6 +119,5 @@ His research focuses on computational methods for bioinformatics, network biolog
 - 인천대학교 우수연구상 (2020)
 - 한국지능시스템학회 신진연구자상 (2018)
 - 삼성전자 장학생 (2008)
-- 인하대학교 최우등 졸업 (2007)
 
 </div>
