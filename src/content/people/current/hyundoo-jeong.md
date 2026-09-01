@@ -46,10 +46,10 @@ His research focuses on computational methods for bioinformatics, network biolog
 
 ## Professional Experience
 
-- **September 2025–Present**  
+- **September 2024–Present**  
   Associate Professor, Department of Biomedical & Robotics Engineering, Incheon National University
 
-- **March 2024–August 2025**  
+- **March 2024–August 2024**  
   Assistant Professor, Department of Biomedical & Robotics Engineering, Incheon National University
 
 - **September 2019–February 2024**  
@@ -91,10 +91,10 @@ His research focuses on computational methods for bioinformatics, network biolog
 
 ## 경력
 
-- **2025년 9월 ~ 현재**  
+- **2024년 9월 ~ 현재**  
   인천대학교 바이오-로봇시스템공학과 부교수
 
-- **2024년 3월 ~ 2025년 8월**  
+- **2024년 3월 ~ 2024년 8월**  
   인천대학교 바이오-로봇시스템공학과 조교수
 
 - **2019년 9월 ~ 2024년 2월**  
