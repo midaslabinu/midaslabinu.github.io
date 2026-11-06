@@ -3,7 +3,7 @@ title:
   ko: "JMIR Medical Informatics 논문 게재"
   en: "New Publication in JMIR Medical Informatics"
 
-date: 2026-06-01
+date: 2026-06-011
 
 summary:
   ko: "박사과정 아리파 자히르 학생이 음성 기반 파킨슨병 선별에 관한 논문을 JMIR Medical Informatics에 게재했습니다."
