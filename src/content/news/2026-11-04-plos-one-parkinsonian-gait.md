@@ -27,7 +27,7 @@ By quantifying directional coupling between different body landmarks, the propos
 
 <div data-content-lang="ko">
 
-박사과정 **아리파 자히르(Arifa Zahir)** 학생과 공동연구진의 논문 **“Differential and directional body coupling analysis in Parkinsonian gait”**가 *PLOS ONE*에 게재되었습니다.
+박사과정 **아리파 자히르(Arifa Zahir)** 학생과 공동연구진의 논문 **Differential and directional body coupling analysis in Parkinsonian gait**가 *PLOS ONE*에 게재되었습니다.
 
 본 연구에서는 스마트폰으로 촬영한 보행 영상에서 인체 자세 추정 기술을 활용하여 신체 부위 간 움직임의 상호 연관성을 분석하는 계산 프레임워크를 제안하였습니다.
 
